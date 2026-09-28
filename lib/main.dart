@@ -60,22 +60,50 @@ class _LoginPageState extends State<LoginPage> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight - 20),
-                child: IntrinsicHeight(
-                  child: Column(
-                    children: [
-                      _buildBrand(),
-                      const SizedBox(height: 8),
-                      _buildStationHero(),
-                      const SizedBox(height: 12),
-                      _buildLoginForm(),
-                      const Spacer(),
-                      const SizedBox(height: 10),
-                      _buildRegisterFooter(),
-                    ],
-                  ),
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 58),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0xFF0B6467), Color(0xFF063F45)],
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildBrand(),
+                          const SizedBox(height: 8),
+                          _buildStationHero(),
+                        ],
+                      ),
+                    ),
+                    Transform.translate(
+                      offset: const Offset(0, -42),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(34),
+                            topRight: Radius.circular(34),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildLoginForm(),
+                            const SizedBox(height: 12),
+                            _buildRegisterFooter(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -133,15 +161,15 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildStationHero() {
     return Container(
-      height: 130,
+      height: 210,
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(0),
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF0B5F65), Color(0xFF083B45)],
+          colors: [Color(0xFF126C70), Color(0xFF073F48)],
         ),
       ),
       child: Stack(
@@ -159,11 +187,11 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           Positioned(
-            bottom: 14,
-            left: 18,
-            right: 18,
+            bottom: 18,
+            left: 8,
+            right: 8,
             child: Container(
-              height: 56,
+              height: 92,
               decoration: BoxDecoration(
                 color: const Color(0xFF0B6D54),
                 borderRadius: BorderRadius.circular(7),
@@ -184,28 +212,28 @@ class _LoginPageState extends State<LoginPage> {
                     child: Container(height: 7, color: _lime),
                   ),
                   const Positioned(
-                    left: 13,
-                    top: 13,
+                    left: 18,
+                    top: 18,
                     child: Text(
                       'POWER 9',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 22,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
                   Positioned(
-                    left: 13,
-                    right: 13,
-                    bottom: 9,
+                    left: 18,
+                    right: 18,
+                    bottom: 14,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(
                         5,
                         (_) => Container(
-                          width: 14,
-                          height: 14,
+                          width: 18,
+                          height: 18,
                           decoration: BoxDecoration(
                             color: const Color(0xFFF7FFF9),
                             borderRadius: BorderRadius.circular(2),
@@ -222,13 +250,13 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           const Positioned(
-            left: 18,
+            left: 14,
             top: 14,
             child: Text(
               'More Points.\nFurther Journeys.',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 11,
+                fontSize: 14,
                 height: 1.2,
                 fontWeight: FontWeight.w700,
               ),
@@ -249,7 +277,7 @@ class _LoginPageState extends State<LoginPage> {
             'Welcome Back!',
             style: TextStyle(
               color: _navy,
-              fontSize: 21,
+              fontSize: 27,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -325,7 +353,8 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           const SizedBox(height: 4),
-          Center(
+          Align(
+            alignment: Alignment.centerRight,
             child: TextButton(
               key: const Key('forgot_password'),
               onPressed: () {},
