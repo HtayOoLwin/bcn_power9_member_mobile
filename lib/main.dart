@@ -56,58 +56,63 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 58),
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFF0B6467), Color(0xFF063F45)],
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          _buildBrand(),
-                          const SizedBox(height: 8),
-                          _buildStationHero(),
-                        ],
-                      ),
-                    ),
-                    Transform.translate(
-                      offset: const Offset(0, -42),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(34),
-                            topRight: Radius.circular(34),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            _buildLoginForm(),
-                            const SizedBox(height: 12),
-                            _buildRegisterFooter(),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Stack(
+                children: [
+                  Column(
+                    children: [
+                      _buildHero(),
+                      const SizedBox(height: 540),
+                    ],
+                  ),
+                  Positioned(
+                    top: 405,
+                    left: 0,
+                    right: 0,
+                    child: _buildLoginPanel(),
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHero() {
+    return Container(
+      height: 455,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0B6870), Color(0xFF07554F)],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned(
+              left: -20,
+              right: -20,
+              bottom: 0,
+              child: _buildStation(),
+            ),
+            Positioned(
+              top: 26,
+              left: 20,
+              right: 20,
+              child: _buildBrand(),
+            ),
+          ],
         ),
       ),
     );
@@ -119,12 +124,12 @@ class _LoginPageState extends State<LoginPage> {
         RichText(
           text: const TextSpan(
             style: TextStyle(
-              fontSize: 30,
+              fontSize: 43,
               fontWeight: FontWeight.w900,
-              letterSpacing: -2,
+              letterSpacing: -2.5,
             ),
             children: [
-              TextSpan(text: 'POWER ', style: TextStyle(color: _darkGreen)),
+              TextSpan(text: 'POWER ', style: TextStyle(color: Colors.white)),
               TextSpan(text: '9', style: TextStyle(color: _lime)),
             ],
           ),
@@ -132,133 +137,110 @@ class _LoginPageState extends State<LoginPage> {
         const Text(
           'Reward App',
           style: TextStyle(
-            color: _darkGreen,
-            fontSize: 18,
-            height: 0.95,
+            color: Colors.white,
+            fontSize: 29,
+            height: .95,
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 3),
+        const SizedBox(height: 8),
         const Text(
           'Fuel Rewards',
           style: TextStyle(
-            color: _darkGreen,
-            fontSize: 11,
+            color: Colors.white,
+            fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
         const Text(
           'Brighter Journeys',
           style: TextStyle(
-            color: _darkGreen,
-            fontSize: 9,
-            letterSpacing: .3,
+            color: Colors.white,
+            fontSize: 15,
+            height: 1.25,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStationHero() {
-    return Container(
-      height: 210,
-      width: double.infinity,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(0),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF126C70), Color(0xFF073F48)],
-        ),
-      ),
+  Widget _buildStation() {
+    return SizedBox(
+      height: 270,
       child: Stack(
+        alignment: Alignment.bottomCenter,
         children: [
           Positioned(
-            top: -45,
-            right: -35,
-            child: Container(
-              width: 145,
-              height: 145,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: .06),
+            left: 0,
+            right: 0,
+            bottom: 80,
+            child: Transform.rotate(
+              angle: .055,
+              child: Container(
+                height: 98,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF006A50),
+                  border: Border(
+                    bottom: BorderSide(color: _lime, width: 5),
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x55000000),
+                      blurRadius: 14,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'POWER 9',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          ...[55.0, 150.0, 245.0, 340.0].map(
+            (x) => Positioned(
+              left: x,
+              bottom: 0,
+              child: Container(
+                width: 28,
+                height: 118,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8ECE7),
+                  border: Border(
+                    top: BorderSide(color: _lime, width: 7),
+                  ),
+                ),
               ),
             ),
           ),
           Positioned(
-            bottom: 18,
-            left: 8,
-            right: 8,
-            child: Container(
-              height: 92,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0B6D54),
-                borderRadius: BorderRadius.circular(7),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x44000000),
-                    blurRadius: 10,
-                    offset: Offset(0, 6),
+            left: 22,
+            right: 22,
+            bottom: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(
+                4,
+                (_) => Container(
+                  width: 48,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF087055),
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: const Color(0xFFB4E84C), width: 2),
                   ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(height: 7, color: _lime),
+                  child: const Icon(
+                    Icons.local_gas_station_rounded,
+                    color: Colors.white,
+                    size: 24,
                   ),
-                  const Positioned(
-                    left: 18,
-                    top: 18,
-                    child: Text(
-                      'POWER 9',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 18,
-                    right: 18,
-                    bottom: 14,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: List.generate(
-                        5,
-                        (_) => Container(
-                          width: 18,
-                          height: 18,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF7FFF9),
-                            borderRadius: BorderRadius.circular(2),
-                            boxShadow: const [
-                              BoxShadow(color: Color(0x33000000), blurRadius: 5),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Positioned(
-            left: 14,
-            top: 14,
-            child: Text(
-              'More Points.\nFurther Journeys.',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                height: 1.2,
-                fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -267,146 +249,161 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildLoginForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'Welcome Back!',
-            style: TextStyle(
-              color: _navy,
-              fontSize: 27,
-              fontWeight: FontWeight.w900,
-            ),
+  Widget _buildLoginPanel() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(26, 30, 26, 32),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(38),
+          topRight: Radius.circular(38),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x17000000),
+            blurRadius: 20,
+            offset: Offset(0, -3),
           ),
-          const SizedBox(height: 3),
-          const Text(
-            'Login to your account and continue\nyour POWER 9 rewards journey.',
-            style: TextStyle(
-              color: Color(0xFF68778C),
-              fontSize: 11,
-              height: 1.3,
-            ),
-          ),
-          const SizedBox(height: 9),
-          TextFormField(
-            key: const Key('login_identifier'),
-            controller: _userController,
-            textInputAction: TextInputAction.next,
-            decoration: _inputDecoration(
-              hint: 'Email address or phone number',
-              icon: Icons.mail_outline_rounded,
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your email or phone number.';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            key: const Key('login_password'),
-            controller: _passwordController,
-            obscureText: _obscurePassword,
-            textInputAction: TextInputAction.done,
-            onFieldSubmitted: (_) => _login(),
-            decoration: _inputDecoration(
-              hint: 'Password',
-              icon: Icons.lock_outline_rounded,
-              suffix: IconButton(
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  size: 19,
-                  color: const Color(0xFF0B3553),
-                ),
+        ],
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Welcome Back!',
+              style: TextStyle(
+                color: _darkGreen,
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
               ),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your password.';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 9),
-          SizedBox(
-            height: 42,
-            child: FilledButton(
-              key: const Key('login_button'),
-              onPressed: _login,
-              style: FilledButton.styleFrom(
-                backgroundColor: _green,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                ),
-              ),
-              child: const Text(
-                'Login',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+            const SizedBox(height: 8),
+            const Text(
+              'Login to your account and continue\nyour POWER 9 rewards journey.',
+              style: TextStyle(
+                color: Color(0xFF748294),
+                fontSize: 15,
+                height: 1.4,
               ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              key: const Key('forgot_password'),
-              onPressed: () {},
-              child: const Text(
-                'Forgot Password?',
-                style: TextStyle(
-                  color: _green,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
+            const SizedBox(height: 24),
+            TextFormField(
+              key: const Key('login_identifier'),
+              controller: _userController,
+              textInputAction: TextInputAction.next,
+              decoration: _inputDecoration(
+                hint: 'Email address or phone number',
+                icon: Icons.mail_outline_rounded,
               ),
+              validator: (value) =>
+                  value == null || value.trim().isEmpty
+                      ? 'Please enter your email or phone number.'
+                      : null,
             ),
-          ),
-          const SizedBox(height: 2),
-          const Row(
-            children: [
-              Expanded(child: Divider(color: Color(0xFFD9E1E5))),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'OR',
-                  style: TextStyle(
-                    color: Color(0xFF7C8996),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+            const SizedBox(height: 14),
+            TextFormField(
+              key: const Key('login_password'),
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _login(),
+              decoration: _inputDecoration(
+                hint: 'Password',
+                icon: Icons.lock_outline_rounded,
+                suffix: IconButton(
+                  onPressed: () => setState(
+                    () => _obscurePassword = !_obscurePassword,
+                  ),
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: _darkGreen,
                   ),
                 ),
               ),
-              Expanded(child: Divider(color: Color(0xFFD9E1E5))),
-            ],
-          ),
-          const SizedBox(height: 9),
-          SizedBox(
-            height: 42,
-            child: OutlinedButton.icon(
-              key: const Key('create_account_button'),
-              onPressed: () {},
-              icon: const Icon(Icons.person_add_alt_1_rounded, size: 19),
-              label: const Text(
-                'Create Account',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _green,
-                side: const BorderSide(color: _green, width: 1.4),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
+              validator: (value) =>
+                  value == null || value.isEmpty
+                      ? 'Please enter your password.'
+                      : null,
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                key: const Key('forgot_password'),
+                onPressed: () {},
+                child: const Text(
+                  'Forgot Password?',
+                  style: TextStyle(
+                    color: _green,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            SizedBox(
+              height: 54,
+              child: FilledButton(
+                key: const Key('login_button'),
+                onPressed: _login,
+                style: FilledButton.styleFrom(
+                  backgroundColor: _green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  'Login',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Row(
+              children: [
+                Expanded(child: Divider(color: Color(0xFFD4DDE0))),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 14),
+                  child: Text(
+                    'OR',
+                    style: TextStyle(
+                      color: Color(0xFF788695),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Expanded(child: Divider(color: Color(0xFFD4DDE0))),
+              ],
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              height: 52,
+              child: OutlinedButton.icon(
+                key: const Key('create_account_button'),
+                onPressed: () {},
+                icon: const Icon(Icons.person_add_alt_1_rounded),
+                label: const Text(
+                  'Create Account',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _green,
+                  side: const BorderSide(color: _green, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            _buildRegisterFooter(),
+          ],
+        ),
       ),
     );
   }
@@ -417,7 +414,7 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         const Text(
           "Don't have an account? ",
-          style: TextStyle(color: Color(0xFF748092), fontSize: 11),
+          style: TextStyle(color: Color(0xFF748092), fontSize: 13),
         ),
         GestureDetector(
           onTap: () {},
@@ -425,7 +422,7 @@ class _LoginPageState extends State<LoginPage> {
             'Register now.',
             style: TextStyle(
               color: _green,
-              fontSize: 11,
+              fontSize: 13,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -441,31 +438,30 @@ class _LoginPageState extends State<LoginPage> {
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFF8B99A8), fontSize: 12),
-      prefixIcon: Icon(icon, size: 21, color: const Color(0xFF173C5A)),
+      hintStyle: const TextStyle(color: Color(0xFF8997A7), fontSize: 14),
+      prefixIcon: Icon(icon, color: _darkGreen),
       suffixIcon: suffix,
       filled: true,
-      fillColor: Colors.white,
-      isDense: true,
-      contentPadding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
+      fillColor: const Color(0xFFFCFDFD),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD7E1E8)),
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFFD4DDE0)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD7E1E8)),
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFFD4DDE0)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: _green, width: 1.5),
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: _green, width: 1.6),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(15),
         borderSide: const BorderSide(color: Colors.redAccent),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(15),
         borderSide: const BorderSide(color: Colors.redAccent),
       ),
     );
