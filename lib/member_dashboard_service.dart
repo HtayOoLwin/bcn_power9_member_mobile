@@ -91,10 +91,8 @@ class MemberDashboardService {
 
   final MemberAuthService authService;
 
-  static const _profilePath =
-      '/api/method/bcn_point_management_system.api.member.get_member_profile';
-  static const _transactionsPath =
-      '/api/method/bcn_point_management_system.api.member.get_member_transactions';
+  static const _currentUserPath =
+      '/api/method/power9_current_user';
 
   Future<MemberDashboardResult> load() async {
     if (authService.sessionCookies.isEmpty) {
@@ -104,36 +102,37 @@ class MemberDashboardService {
     }
 
     try {
-      final profilePayload = await _get(_profilePath);
-      final profileRaw = profilePayload['message'];
-      if (profileRaw is! Map) {
+      final userPayload = await _get(_currentUserPath);
+      final userRaw = userPayload['message'];
+
+      if (userRaw is! Map) {
         return const MemberDashboardResult.failure(
-          'Member profile was not returned by the server.',
+          'Current mobile login user was not returned by the server.',
         );
       }
 
-      final txPayload = await _get(
-        _transactionsPath,
-        query: const {'start': '0', 'limit_page_length': '4'},
-      );
-      final txMessage = txPayload['message'];
-      final txRows = txMessage is Map ? txMessage['transactions'] : null;
+      final user = Map<String, dynamic>.from(userRaw);
+      final loginUser = (user['user'] ?? '').toString();
+      final fullName = (user['full_name'] ?? loginUser).toString();
 
-      final transactions = <MemberTransaction>[];
-      if (txRows is List) {
-        for (final raw in txRows.whereType<Map>()) {
-          transactions.add(
-            MemberTransaction.fromJson(Map<String, dynamic>.from(raw)),
-          );
-        }
+      if (loginUser.isEmpty || loginUser == 'Guest') {
+        return const MemberDashboardResult.failure(
+          'Mobile login session is not valid. Please login again.',
+        );
       }
 
       return MemberDashboardResult.success(
         MemberDashboardData(
-          profile: MemberProfile.fromJson(
-            Map<String, dynamic>.from(profileRaw),
+          profile: MemberProfile(
+            name: loginUser,
+            memberName: fullName,
+            memberType: '',
+            status: '',
+            currentPointBalance: 0,
+            email: loginUser,
+            phone: '',
           ),
-          transactions: transactions,
+          transactions: const [],
         ),
       );
     } on HttpException catch (e) {
