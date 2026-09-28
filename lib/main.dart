@@ -60,19 +60,19 @@ class _LoginPageState extends State<LoginPage> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight - 38),
+                constraints: BoxConstraints(minHeight: constraints.maxHeight - 20),
                 child: IntrinsicHeight(
                   child: Column(
                     children: [
                       _buildBrand(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                       _buildStationHero(),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 12),
                       _buildLoginForm(),
                       const Spacer(),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 10),
                       _buildRegisterFooter(),
                     ],
                   ),
@@ -91,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
         RichText(
           text: const TextSpan(
             style: TextStyle(
-              fontSize: 37,
+              fontSize: 30,
               fontWeight: FontWeight.w900,
               letterSpacing: -2,
             ),
@@ -105,17 +105,17 @@ class _LoginPageState extends State<LoginPage> {
           'Reward App',
           style: TextStyle(
             color: _darkGreen,
-            fontSize: 22,
+            fontSize: 18,
             height: 0.95,
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 3),
         const Text(
           'Fuel Rewards',
           style: TextStyle(
             color: _darkGreen,
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -123,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
           'Brighter Journeys',
           style: TextStyle(
             color: _darkGreen,
-            fontSize: 11,
+            fontSize: 9,
             letterSpacing: .3,
           ),
         ),
@@ -133,11 +133,11 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildStationHero() {
     return Container(
-      height: 165,
+      height: 130,
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(15),
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -150,8 +150,8 @@ class _LoginPageState extends State<LoginPage> {
             top: -45,
             right: -35,
             child: Container(
-              width: 175,
-              height: 175,
+              width: 145,
+              height: 145,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: .06),
@@ -159,11 +159,11 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           Positioned(
-            bottom: 20,
-            left: 22,
-            right: 22,
+            bottom: 14,
+            left: 18,
+            right: 18,
             child: Container(
-              height: 72,
+              height: 56,
               decoration: BoxDecoration(
                 color: const Color(0xFF0B6D54),
                 borderRadius: BorderRadius.circular(7),
@@ -184,28 +184,28 @@ class _LoginPageState extends State<LoginPage> {
                     child: Container(height: 7, color: _lime),
                   ),
                   const Positioned(
-                    left: 16,
-                    top: 18,
+                    left: 13,
+                    top: 13,
                     child: Text(
                       'POWER 9',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: 16,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
                   Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 13,
+                    left: 13,
+                    right: 13,
+                    bottom: 9,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(
                         5,
                         (_) => Container(
-                          width: 18,
-                          height: 18,
+                          width: 14,
+                          height: 14,
                           decoration: BoxDecoration(
                             color: const Color(0xFFF7FFF9),
                             borderRadius: BorderRadius.circular(2),
@@ -222,14 +222,14 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           const Positioned(
-            left: 22,
-            top: 18,
+            left: 18,
+            top: 14,
             child: Text(
               'More Points.\nFurther Journeys.',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 13,
-                height: 1.25,
+                fontSize: 11,
+                height: 1.2,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -249,20 +249,20 @@ class _LoginPageState extends State<LoginPage> {
             'Welcome Back!',
             style: TextStyle(
               color: _navy,
-              fontSize: 25,
+              fontSize: 21,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 3),
           const Text(
             'Login to your account and continue\nyour POWER 9 rewards journey.',
             style: TextStyle(
               color: Color(0xFF68778C),
-              fontSize: 13,
-              height: 1.35,
+              fontSize: 11,
+              height: 1.3,
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 9),
           TextFormField(
             key: const Key('login_identifier'),
             controller: _userController,
@@ -294,7 +294,7 @@ class _LoginPageState extends State<LoginPage> {
                   _obscurePassword
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
-                  size: 21,
+                  size: 19,
                   color: const Color(0xFF0B3553),
                 ),
               ),
@@ -306,9 +306,9 @@ class _LoginPageState extends State<LoginPage> {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 9),
           SizedBox(
-            height: 48,
+            height: 42,
             child: FilledButton(
               key: const Key('login_button'),
               onPressed: _login,
@@ -320,7 +320,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               child: const Text(
                 'Login',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
               ),
             ),
           ),
@@ -333,7 +333,7 @@ class _LoginPageState extends State<LoginPage> {
                 'Forgot Password?',
                 style: TextStyle(
                   color: _green,
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -357,9 +357,9 @@ class _LoginPageState extends State<LoginPage> {
               Expanded(child: Divider(color: Color(0xFFD9E1E5))),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 9),
           SizedBox(
-            height: 47,
+            height: 42,
             child: OutlinedButton.icon(
               key: const Key('create_account_button'),
               onPressed: () {},
@@ -388,7 +388,7 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         const Text(
           "Don't have an account? ",
-          style: TextStyle(color: Color(0xFF748092), fontSize: 12),
+          style: TextStyle(color: Color(0xFF748092), fontSize: 11),
         ),
         GestureDetector(
           onTap: () {},
@@ -396,7 +396,7 @@ class _LoginPageState extends State<LoginPage> {
             'Register now.',
             style: TextStyle(
               color: _green,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -412,13 +412,13 @@ class _LoginPageState extends State<LoginPage> {
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFF8B99A8), fontSize: 13),
+      hintStyle: const TextStyle(color: Color(0xFF8B99A8), fontSize: 12),
       prefixIcon: Icon(icon, size: 21, color: const Color(0xFF173C5A)),
       suffixIcon: suffix,
       filled: true,
       fillColor: Colors.white,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+      contentPadding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Color(0xFFD7E1E8)),
