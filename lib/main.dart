@@ -50,34 +50,42 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       body: SafeArea(
         top: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
             final h = constraints.maxHeight;
+            final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
             final heroHeight = h * .48;
             final panelTop = h * .43;
-            return SizedBox(
-              height: h,
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: heroHeight,
-                    child: _hero(),
-                  ),
-                  Positioned(
-                    top: panelTop,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: _loginPanel(h),
-                  ),
-                ],
+
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: SizedBox(
+                height: h,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: heroHeight,
+                      child: _hero(),
+                    ),
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOut,
+                      top: keyboardOpen ? h * .25 : panelTop,
+                      left: 0,
+                      right: 0,
+                      bottom: keyboardOpen ? null : 0,
+                      child: _loginPanel(h, keyboardOpen: keyboardOpen),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -165,11 +173,11 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _loginPanel(double screenHeight) {
-    final compact = screenHeight < 760;
+  Widget _loginPanel(double screenHeight, {bool keyboardOpen = false}) {
+    final compact = screenHeight < 760 || keyboardOpen;
     final pad = compact ? 18.0 : 22.0;
     return Container(
-      padding: EdgeInsets.fromLTRB(24, pad, 24, 10),
+      padding: EdgeInsets.fromLTRB(24, keyboardOpen ? 14 : pad, 24, keyboardOpen ? 14 : 10),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -189,22 +197,22 @@ class _LoginPageState extends State<LoginPage> {
               'Welcome Back!',
               style: TextStyle(
                 color: darkGreen,
-                fontSize: compact ? 24 : 27,
+                fontSize: keyboardOpen ? 21 : (compact ? 24 : 27),
                 fontWeight: FontWeight.w900,
               ),
             ),
-            SizedBox(height: compact ? 3 : 5),
+            SizedBox(height: keyboardOpen ? 2 : (compact ? 3 : 5)),
             Text(
               'Login to your account and continue\nyour POWER 9 rewards journey.',
               style: TextStyle(
                 color: const Color(0xFF748294),
-                fontSize: compact ? 12 : 13,
-                height: 1.3,
+                fontSize: keyboardOpen ? 11 : (compact ? 12 : 13),
+                height: 1.25,
               ),
             ),
-            SizedBox(height: compact ? 10 : 14),
+            SizedBox(height: keyboardOpen ? 7 : (compact ? 10 : 14)),
             SizedBox(
-              height: compact ? 48 : 52,
+              height: keyboardOpen ? 43 : (compact ? 48 : 52),
               child: TextFormField(
                 key: const Key('login_identifier'),
                 controller: _userController,
@@ -219,9 +227,9 @@ class _LoginPageState extends State<LoginPage> {
                     : null,
               ),
             ),
-            SizedBox(height: compact ? 8 : 10),
+            SizedBox(height: keyboardOpen ? 6 : (compact ? 8 : 10)),
             SizedBox(
-              height: compact ? 48 : 52,
+              height: keyboardOpen ? 43 : (compact ? 48 : 52),
               child: TextFormField(
                 key: const Key('login_password'),
                 controller: _passwordController,
@@ -252,7 +260,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             SizedBox(
-              height: compact ? 34 : 38,
+              height: keyboardOpen ? 29 : (compact ? 34 : 38),
               child: Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -275,7 +283,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             SizedBox(
-              height: compact ? 44 : 48,
+              height: keyboardOpen ? 40 : (compact ? 44 : 48),
               child: FilledButton(
                 key: const Key('login_button'),
                 onPressed: _login,
@@ -294,7 +302,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-            SizedBox(height: compact ? 8 : 11),
+            SizedBox(height: keyboardOpen ? 5 : (compact ? 8 : 11)),
             const Row(
               children: [
                 Expanded(child: Divider(color: Color(0xFFD4DDE0))),
@@ -312,9 +320,9 @@ class _LoginPageState extends State<LoginPage> {
                 Expanded(child: Divider(color: Color(0xFFD4DDE0))),
               ],
             ),
-            SizedBox(height: compact ? 8 : 11),
+            SizedBox(height: keyboardOpen ? 5 : (compact ? 8 : 11)),
             SizedBox(
-              height: compact ? 43 : 47,
+              height: keyboardOpen ? 39 : (compact ? 43 : 47),
               child: OutlinedButton.icon(
                 key: const Key('create_account_button'),
                 onPressed: () {},
@@ -335,8 +343,8 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-            const Spacer(),
-            Padding(
+            if (!keyboardOpen) const Spacer(),
+            if (!keyboardOpen) Padding(
               padding: const EdgeInsets.only(bottom: 3),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
