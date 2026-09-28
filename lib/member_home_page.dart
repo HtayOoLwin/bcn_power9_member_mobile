@@ -18,39 +18,22 @@ class _MemberHomePageState extends State<MemberHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8F5),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: green,
-        foregroundColor: Colors.white,
-        title: const Text(
-          'POWER 9',
-          style: TextStyle(fontWeight: FontWeight.w900),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Badge(
-              smallSize: 7,
-              child: Icon(Icons.notifications_none_rounded),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: IndexedStack(
+      body: SafeArea(
+        child: IndexedStack(
         index: _index,
-        children: [
-          _home(),
-          const _ComingSoonPage(
-            icon: Icons.qr_code_2_rounded,
-            title: 'My Membership Card',
-          ),
-          const _ComingSoonPage(
-            icon: Icons.receipt_long_rounded,
-            title: 'Point History',
-          ),
-          _profile(),
-        ],
+          children: [
+            _home(),
+            const _ComingSoonPage(
+              icon: Icons.qr_code_2_rounded,
+              title: 'My Membership Card',
+            ),
+            const _ComingSoonPage(
+              icon: Icons.receipt_long_rounded,
+              title: 'Point History',
+            ),
+            _profile(),
+          ],
+        ),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
@@ -88,35 +71,53 @@ class _MemberHomePageState extends State<MemberHomePage> {
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              width: 58,
-              height: 58,
-              decoration: const BoxDecoration(color: mint, shape: BoxShape.circle),
-              child: const Icon(Icons.person_rounded, size: 34, color: darkGreen),
-            ),
-            const SizedBox(width: 13),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Welcome,', style: TextStyle(color: Color(0xFF718092))),
+                  const Text(
+                    'Hello,',
+                    style: TextStyle(color: Color(0xFF718092), fontSize: 14),
+                  ),
                   Text(
                     widget.fullName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Color(0xFF102032),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 25,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   const Text(
-                    'POWER 9 Member',
+                    'Good to see you again!',
                     style: TextStyle(color: Color(0xFF718092), fontSize: 12),
                   ),
                 ],
               ),
+            ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: const BoxDecoration(color: mint, shape: BoxShape.circle),
+                  child: const Icon(Icons.person_rounded, size: 30, color: darkGreen),
+                ),
+                const Positioned(
+                  right: -3,
+                  top: -3,
+                  child: CircleAvatar(
+                    radius: 9,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.notifications_none_rounded, size: 17, color: darkGreen),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -128,24 +129,29 @@ class _MemberHomePageState extends State<MemberHomePage> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF0A8A66), Color(0xFF006B50)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0AA77B), Color(0xFF08745C)],
               ),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Row(
               children: [
-                Icon(Icons.toll_rounded, color: Colors.white, size: 42),
-                SizedBox(width: 15),
+                SizedBox(width: 2),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Total Points', style: TextStyle(color: Colors.white70)),
                       Text(
-                        '1,250',
+                        'Silver Member',
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        '1,250 Points',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 34,
+                          fontSize: 30,
                           height: 1.05,
                           fontWeight: FontWeight.w900,
                         ),
@@ -153,44 +159,9 @@ class _MemberHomePageState extends State<MemberHomePage> {
                     ],
                   ),
                 ),
-                Column(
-                  children: [
-                    Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 30),
-                    SizedBox(height: 4),
-                    Text(
-                      'Silver Member',
-                      style: TextStyle(color: Colors.white, fontSize: 11),
-                    ),
-                  ],
-                ),
+                Icon(Icons.chevron_right_rounded, color: Colors.white, size: 28),
               ],
             ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        Container(
-          height: 116,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: darkGreen,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: const Row(
-            children: [
-              Icon(Icons.local_gas_station_rounded, color: Colors.white, size: 52),
-              SizedBox(width: 18),
-              Expanded(
-                child: Text(
-                  'Fuel Rewards\nBrighter Journeys',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    height: 1.25,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
         const SizedBox(height: 20),
@@ -198,7 +169,7 @@ class _MemberHomePageState extends State<MemberHomePage> {
           children: [
             const Expanded(
               child: Text(
-                'Recent Transactions',
+                'Recent Activity',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
               ),
             ),
