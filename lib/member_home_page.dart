@@ -176,7 +176,7 @@ class _MemberHomePageState extends State<MemberHomePage> {
               ),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 SizedBox(width: 2),
                 Expanded(
