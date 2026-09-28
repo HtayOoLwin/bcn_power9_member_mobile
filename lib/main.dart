@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'member_registration_page.dart';
 
 void main() => runApp(const Power9MemberApp());
 
@@ -325,7 +326,11 @@ class _LoginPageState extends State<LoginPage> {
               height: keyboardOpen ? 39 : (compact ? 43 : 47),
               child: OutlinedButton.icon(
                 key: const Key('create_account_button'),
-                onPressed: () {},
+                onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const MemberRegistrationPage(),
+                    ),
+                  ),
                 icon: const Icon(Icons.person_add_alt_1_rounded, size: 19),
                 label: Text(
                   'Create Account',
@@ -356,7 +361,11 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(color: Color(0xFF748092), fontSize: 12),
                     ),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const MemberRegistrationPage(),
+                    ),
+                  ),
                       child: const Text(
                         'Register now.',
                         style: TextStyle(
