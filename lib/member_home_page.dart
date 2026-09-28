@@ -392,7 +392,9 @@ class _MemberHomePageState extends State<MemberHomePage> {
     );
 
     if (logout == true && mounted) {
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      await widget.authService.logout();
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
     }
   }
 }
