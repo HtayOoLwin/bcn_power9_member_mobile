@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 
+import 'auth_service.dart';
+import 'member_dashboard_service.dart';
+
 class MemberHomePage extends StatefulWidget {
-  const MemberHomePage({super.key, required this.fullName});
+  const MemberHomePage({
+    super.key,
+    required this.fullName,
+    required this.authService,
+  });
   final String fullName;
+  final MemberAuthService authService;
 
   @override
   State<MemberHomePage> createState() => _MemberHomePageState();
@@ -13,6 +21,34 @@ class _MemberHomePageState extends State<MemberHomePage> {
   static const darkGreen = Color(0xFF004E45);
   static const mint = Color(0xFFE7F5EF);
   int _index = 0;
+  MemberDashboardData? _data;
+  String? _loadError;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboard();
+  }
+
+  Future<void> _loadDashboard() async {
+    setState(() {
+      _loading = true;
+      _loadError = null;
+    });
+    final result = await MemberDashboardService(widget.authService).load();
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _data = result.data;
+      _loadError = result.success ? null : result.message;
+    });
+  }
+
+  String _points(num value) {
+    if (value == value.roundToDouble()) return value.toInt().toString();
+    return value.toStringAsFixed(2);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +103,10 @@ class _MemberHomePageState extends State<MemberHomePage> {
   }
 
   Widget _home() {
-    return ListView(
+    return RefreshIndicator(
+      color: green,
+      onRefresh: _loadDashboard,
+      child: ListView(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
       children: [
         Row(
@@ -82,7 +121,9 @@ class _MemberHomePageState extends State<MemberHomePage> {
                     style: TextStyle(color: Color(0xFF718092), fontSize: 14),
                   ),
                   Text(
-                    widget.fullName,
+                    _data?.profile.memberName.isNotEmpty == true
+                        ? _data!.profile.memberName
+                        : widget.fullName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -143,12 +184,14 @@ class _MemberHomePageState extends State<MemberHomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Silver Member',
+                        (_data?.profile.memberType.isNotEmpty == true
+                            ? '${_data!.profile.memberType} Member'
+                            : 'Member'),
                         style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
                       ),
                       SizedBox(height: 8),
                       Text(
-                        '1,250 Points',
+                        '${_points(_data?.profile.currentPointBalance ?? 0)} Points',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 30,
@@ -179,11 +222,54 @@ class _MemberHomePageState extends State<MemberHomePage> {
             ),
           ],
         ),
-        _transaction(Icons.add_circle, 'Fuel Purchase', '28/09/2026 10:30', '+ 200', true),
-        _transaction(Icons.add_circle, 'Bonus Points', '25/09/2026 14:20', '+ 50', true),
-        _transaction(Icons.remove_circle, 'Redeem Reward', '20/09/2026 11:15', '- 300', false),
-        _transaction(Icons.add_circle, 'Welcome Bonus', '15/09/2026 09:40', '+ 1,000', true),
+        if (_loading)
+          const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(child: CircularProgressIndicator(color: green)),
+          )
+        else if (_loadError != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            child: Column(
+              children: [
+                Text(
+                  _loadError!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+                TextButton(onPressed: _loadDashboard, child: const Text('Retry')),
+              ],
+            ),
+          )
+        else if (_data!.transactions.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'No recent activity.',
+                style: TextStyle(color: Color(0xFF758396)),
+              ),
+            ),
+          )
+        else
+          ..._data!.transactions.map((tx) {
+            final sign = tx.earned ? '+' : '-';
+            final title = tx.activity.isEmpty
+                ? (tx.earned ? 'Points Earned' : 'Points Redeemed')
+                : tx.activity;
+            final date = [tx.postingDate, tx.postingTime]
+                .where((v) => v.isNotEmpty)
+                .join(' ');
+            return _transaction(
+              tx.earned ? Icons.add_circle : Icons.remove_circle,
+              title,
+              date,
+              '$sign ${_points(tx.points)}',
+              tx.earned,
+            );
+          }),
       ],
+      ),
     );
   }
 
