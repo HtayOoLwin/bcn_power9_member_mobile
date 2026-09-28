@@ -74,6 +74,20 @@ class MemberAuthService {
     }
   }
 
+  Future<void> logout() async {
+    try {
+      final request = await _client.getUrl(
+        Uri.parse('$baseUrl/api/method/logout'),
+      );
+      request.cookies.addAll(_sessionCookies);
+      await request.close();
+    } catch (_) {
+      // Always clear the local session even if the server is unreachable.
+    } finally {
+      _sessionCookies = const [];
+    }
+  }
+
   Map<String, dynamic> _decode(String body) {
     if (body.trim().isEmpty) return const {};
     try {
