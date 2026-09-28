@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const Power9MemberApp());
-}
+void main() => runApp(const Power9MemberApp());
 
 class Power9MemberApp extends StatelessWidget {
   const Power9MemberApp({super.key});
@@ -11,15 +9,11 @@ class Power9MemberApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'POWER 9 Member',
+      title: 'POWER 9 Reward App',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0B6B3A),
-          brightness: Brightness.light,
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF4F7F5),
-        fontFamily: 'Roboto',
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF008B68)),
+        scaffoldBackgroundColor: Colors.white,
       ),
       home: const LoginPage(),
     );
@@ -39,6 +33,11 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
+  static const _green = Color(0xFF008B68);
+  static const _darkGreen = Color(0xFF004E45);
+  static const _lime = Color(0xFF9EE322);
+  static const _navy = Color(0xFF07152B);
+
   @override
   void dispose() {
     _userController.dispose();
@@ -49,11 +48,8 @@ class _LoginPageState extends State<LoginPage> {
   void _login() {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Login API will be connected in the next step.'),
-      ),
+      const SnackBar(content: Text('Login API will be connected next.')),
     );
   }
 
@@ -64,19 +60,22 @@ class _LoginPageState extends State<LoginPage> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  children: [
-                    _buildHero(),
-                    Transform.translate(
-                      offset: const Offset(0, -30),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: _buildLoginCard(),
-                      ),
-                    ),
-                  ],
+                constraints: BoxConstraints(minHeight: constraints.maxHeight - 38),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      _buildBrand(),
+                      const SizedBox(height: 16),
+                      _buildStationHero(),
+                      const SizedBox(height: 18),
+                      _buildLoginForm(),
+                      const Spacer(),
+                      const SizedBox(height: 18),
+                      _buildRegisterFooter(),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -86,270 +85,323 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildHero() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 34, 24, 64),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF075B33),
-            Color(0xFF0B7A43),
-          ],
+  Widget _buildBrand() {
+    return Column(
+      children: [
+        RichText(
+          text: const TextSpan(
+            style: TextStyle(
+              fontSize: 37,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -2,
+            ),
+            children: [
+              TextSpan(text: 'POWER ', style: TextStyle(color: _darkGreen)),
+              TextSpan(text: '9', style: TextStyle(color: _lime)),
+            ],
+          ),
         ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(38),
-          bottomRight: Radius.circular(38),
+        const Text(
+          'Reward App',
+          style: TextStyle(
+            color: _darkGreen,
+            fontSize: 22,
+            height: 0.95,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'Fuel Rewards',
+          style: TextStyle(
+            color: _darkGreen,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const Text(
+          'Brighter Journeys',
+          style: TextStyle(
+            color: _darkGreen,
+            fontSize: 11,
+            letterSpacing: .3,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStationHero() {
+    return Container(
+      height: 165,
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0B5F65), Color(0xFF083B45)],
         ),
       ),
-      child: Column(
+      child: Stack(
         children: [
-          Container(
-            width: 82,
-            height: 82,
-            decoration: BoxDecoration(
-              color: const Color(0xFFD7F238),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Text(
-                'P9',
-                style: TextStyle(
-                  color: Color(0xFF075B33),
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1,
-                ),
+          Positioned(
+            top: -45,
+            right: -35,
+            child: Container(
+              width: 175,
+              height: 175,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: .06),
               ),
             ),
           ),
-          const SizedBox(height: 18),
+          Positioned(
+            bottom: 20,
+            left: 22,
+            right: 22,
+            child: Container(
+              height: 72,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0B6D54),
+                borderRadius: BorderRadius.circular(7),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x44000000),
+                    blurRadius: 10,
+                    offset: Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(height: 7, color: _lime),
+                  ),
+                  const Positioned(
+                    left: 16,
+                    top: 18,
+                    child: Text(
+                      'POWER 9',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 13,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(
+                        5,
+                        (_) => Container(
+                          width: 18,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF7FFF9),
+                            borderRadius: BorderRadius.circular(2),
+                            boxShadow: const [
+                              BoxShadow(color: Color(0x33000000), blurRadius: 5),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const Positioned(
+            left: 22,
+            top: 18,
+            child: Text(
+              'More Points.\nFurther Journeys.',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                height: 1.25,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoginForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           const Text(
-            'POWER 9',
+            'Welcome Back!',
             style: TextStyle(
-              color: Colors.white,
-              fontSize: 30,
+              color: _navy,
+              fontSize: 25,
               fontWeight: FontWeight.w900,
-              letterSpacing: 1.4,
             ),
           ),
           const SizedBox(height: 5),
           const Text(
-            'MEMBER',
+            'Login to your account and continue\nyour POWER 9 rewards journey.',
             style: TextStyle(
-              color: Color(0xFFD7F238),
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 5,
+              color: Color(0xFF68778C),
+              fontSize: 13,
+              height: 1.35,
             ),
+          ),
+          const SizedBox(height: 18),
+          TextFormField(
+            key: const Key('login_identifier'),
+            controller: _userController,
+            textInputAction: TextInputAction.next,
+            decoration: _inputDecoration(
+              hint: 'Email address or phone number',
+              icon: Icons.mail_outline_rounded,
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter your email or phone number.';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 12),
-          Text(
-            'Fuel your journey. Enjoy your rewards.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.78),
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoginCard() {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(maxWidth: 460),
-      padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x16000000),
-            blurRadius: 28,
-            offset: Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Welcome Back',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF163126),
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Sign in to your member account',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF7B8B84),
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 28),
-            _fieldLabel('Email address or phone number'),
-            const SizedBox(height: 8),
-            TextFormField(
-              key: const Key('login_identifier'),
-              controller: _userController,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              decoration: _inputDecoration(
-                hint: 'Enter email or phone number',
-                icon: Icons.person_outline_rounded,
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter your email or phone number.';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 18),
-            _fieldLabel('Password'),
-            const SizedBox(height: 8),
-            TextFormField(
-              key: const Key('login_password'),
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              textInputAction: TextInputAction.done,
-              onFieldSubmitted: (_) => _login(),
-              decoration: _inputDecoration(
-                hint: 'Enter your password',
-                icon: Icons.lock_outline_rounded,
-                suffix: IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                  icon: Icon(
-                    _obscurePassword
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                    color: const Color(0xFF718079),
-                  ),
+          TextFormField(
+            key: const Key('login_password'),
+            controller: _passwordController,
+            obscureText: _obscurePassword,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => _login(),
+            decoration: _inputDecoration(
+              hint: 'Password',
+              icon: Icons.lock_outline_rounded,
+              suffix: IconButton(
+                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  size: 21,
+                  color: const Color(0xFF0B3553),
                 ),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your password.';
-                }
-                return null;
-              },
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                key: const Key('forgot_password'),
-                onPressed: () {},
-                child: const Text(
-                  'Forgot Password?',
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your password.';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 48,
+            child: FilledButton(
+              key: const Key('login_button'),
+              onPressed: _login,
+              style: FilledButton.styleFrom(
+                backgroundColor: _green,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(13),
+                ),
+              ),
+              child: const Text(
+                'Login',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: TextButton(
+              key: const Key('forgot_password'),
+              onPressed: () {},
+              child: const Text(
+                'Forgot Password?',
+                style: TextStyle(
+                  color: _green,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          const Row(
+            children: [
+              Expanded(child: Divider(color: Color(0xFFD9E1E5))),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'OR',
                   style: TextStyle(
-                    color: Color(0xFF0B6B3A),
+                    color: Color(0xFF7C8996),
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 4),
-            SizedBox(
-              height: 54,
-              child: FilledButton(
-                key: const Key('login_button'),
-                onPressed: _login,
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF0B6B3A),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text(
-                  'LOGIN',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
-                  ),
+              Expanded(child: Divider(color: Color(0xFFD9E1E5))),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 47,
+            child: OutlinedButton.icon(
+              key: const Key('create_account_button'),
+              onPressed: () {},
+              icon: const Icon(Icons.person_add_alt_1_rounded, size: 19),
+              label: const Text(
+                'Create Account',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _green,
+                side: const BorderSide(color: _green, width: 1.4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(13),
                 ),
               ),
             ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                const Expanded(child: Divider(color: Color(0xFFE2E8E5))),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    'New to POWER 9?',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                const Expanded(child: Divider(color: Color(0xFFE2E8E5))),
-              ],
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              height: 52,
-              child: OutlinedButton(
-                key: const Key('create_account_button'),
-                onPressed: () {},
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF0B6B3A),
-                  side: const BorderSide(
-                    color: Color(0xFF0B6B3A),
-                    width: 1.4,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text(
-                  'CREATE ACCOUNT',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _fieldLabel(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        color: Color(0xFF31473E),
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-      ),
+  Widget _buildRegisterFooter() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          "Don't have an account? ",
+          style: TextStyle(color: Color(0xFF748092), fontSize: 12),
+        ),
+        GestureDetector(
+          onTap: () {},
+          child: const Text(
+            'Register now.',
+            style: TextStyle(
+              color: _green,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -360,39 +412,31 @@ class _LoginPageState extends State<LoginPage> {
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(
-        color: Color(0xFFA4AEA9),
-        fontSize: 14,
-      ),
-      prefixIcon: Icon(icon, color: const Color(0xFF718079)),
+      hintStyle: const TextStyle(color: Color(0xFF8B99A8), fontSize: 13),
+      prefixIcon: Icon(icon, size: 21, color: const Color(0xFF173C5A)),
       suffixIcon: suffix,
       filled: true,
-      fillColor: const Color(0xFFF7F9F8),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 17,
-      ),
+      fillColor: Colors.white,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Color(0xFFDCE4E0)),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFD7E1E8)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Color(0xFFDCE4E0)),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFD7E1E8)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(
-          color: Color(0xFF0B6B3A),
-          width: 1.6,
-        ),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _green, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Colors.redAccent),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Colors.redAccent),
       ),
     );
