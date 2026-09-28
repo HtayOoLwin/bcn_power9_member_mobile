@@ -70,7 +70,10 @@ class _LoginPageState extends State<LoginPage> {
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => MemberHomePage(fullName: result.fullName),
+        builder: (_) => MemberHomePage(
+          fullName: result.fullName,
+          authService: _authService,
+        ),
       ),
     );
   }
