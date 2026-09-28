@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'member_registration_page.dart';
+import 'auth_service.dart';
+import 'member_home_page.dart';
 
 void main() => runApp(const Power9MemberApp());
 
@@ -28,6 +30,9 @@ class _LoginPageState extends State<LoginPage> {
   final _userController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoggingIn = false;
+  String? _loginError;
+  final MemberAuthService _authService = MemberAuthService();
 
   static const green = Color(0xFF008B68);
   static const darkGreen = Color(0xFF004E45);
@@ -40,11 +45,33 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _login() async {
     FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Login API will be connected next.')),
+    if (!_formKey.currentState!.validate() || _isLoggingIn) return;
+
+    setState(() {
+      _isLoggingIn = true;
+      _loginError = null;
+    });
+
+    final result = await _authService.login(
+      user: _userController.text,
+      password: _passwordController.text,
+    );
+
+    if (!mounted) return;
+
+    setState(() => _isLoggingIn = false);
+
+    if (!result.success) {
+      setState(() => _loginError = result.message ?? 'Login failed.');
+      return;
+    }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => MemberHomePage(fullName: result.fullName),
+      ),
     );
   }
 
@@ -236,7 +263,7 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => _login(),
+                onFieldSubmitted: (_) { _login(); },
                 decoration: _decoration(
                   'Password',
                   Icons.lock_outline_rounded,
@@ -287,22 +314,43 @@ class _LoginPageState extends State<LoginPage> {
               height: keyboardOpen ? 40 : (compact ? 44 : 48),
               child: FilledButton(
                 key: const Key('login_button'),
-                onPressed: _login,
+                onPressed: _isLoggingIn ? null : () { _login(); },
                 style: FilledButton.styleFrom(
                   backgroundColor: green,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(13),
                   ),
                 ),
-                child: Text(
-                  'Login',
-                  style: TextStyle(
-                    fontSize: compact ? 15 : 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                child: _isLoggingIn
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        'Login',
+                        style: TextStyle(
+                          fontSize: compact ? 15 : 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
               ),
             ),
+            if (_loginError != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                _loginError!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
             SizedBox(height: keyboardOpen ? 5 : (compact ? 8 : 11)),
             const Row(
               children: [
