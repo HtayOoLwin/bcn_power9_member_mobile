@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class MemberRegistrationPage extends StatefulWidget {
   const MemberRegistrationPage({super.key});
@@ -11,36 +12,69 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
   static const green = Color(0xFF006B50);
   static const mint = Color(0xFFE6F5EF);
 
+  static const Map<String, List<String>> nrcTownships = {
+    '1': ['KAPATA', 'KHAPANA', 'MAPATA', 'MAPANA', 'WAMANA'],
+    '2': ['BALAKHA', 'DAMASA', 'LACANA', 'PHASANA', 'YATANA'],
+    '3': ['BAANA', 'KAKAYA', 'KADANA', 'KASAKA', 'LATHANA', 'THATANA'],
+    '4': ['HAKHANA', 'KAPALA', 'MATANA', 'PALAWA', 'TATANA', 'TAZANA'],
+    '5': ['AYATA', 'BAMANA', 'KALANA', 'KATHANA', 'MAMANA', 'SAKANA', 'YAMAPA'],
+    '6': ['KATHANA', 'KASANA', 'LATANA', 'MATANA', 'THAYAKHA'],
+    '7': ['BAMANA', 'KAPAKA', 'KAWANA', 'LATANA', 'NATALA', 'PAMANA', 'YAKANA'],
+    '8': ['AHLANA', 'GAGANA', 'KAMANA', 'MATANA', 'MINANA', 'PAKHANA', 'SATAYA'],
+    '9': ['AMAYA', 'KAPATA', 'MAHAMA', 'MAKANA', 'MATAYA', 'PATAYA', 'TAKANA'],
+    '10': ['BALANA', 'KAMAYA', 'KATHANA', 'MALAMA', 'THAPHAYA', 'YAMANA'],
+    '11': ['KAPHANA', 'KATANA', 'MAPANA', 'MATANA', 'SATANA', 'YATHATA'],
+    '12': ['AHLANA', 'BATAHTA', 'DAGANA', 'DAGASA', 'KAMANA', 'KAMAYA', 'LAMANA', 'MAYAKA', 'PABATA', 'TAKANA', 'YAKANA'],
+    '13': ['HAHANA', 'KAHANA', 'KAKHANA', 'KALANA', 'LATANA', 'MAHAYA', 'TAYANA'],
+    '14': ['AMANA', 'BATHALA', 'DADAYA', 'HATHATA', 'KAKHANA', 'LAMANA', 'MAPANA', 'PATANA'],
+  };
+
   final formKey = GlobalKey<FormState>();
   final name = TextEditingController();
   final phone = TextEditingController();
   final email = TextEditingController();
   final address = TextEditingController();
   final idNumber = TextEditingController();
+  final nrcNumber = TextEditingController();
 
   String? gender;
   String? nationality;
   String? idType;
+  String? nrcState;
+  String? nrcTownship;
+  String nrcCitizenType = 'N';
   String memberType = 'Silver';
   DateTime? dob;
   DateTime registrationDate = DateTime.now();
 
   @override
   void dispose() {
-    name.dispose(); phone.dispose(); email.dispose(); address.dispose(); idNumber.dispose();
+    name.dispose();
+    phone.dispose();
+    email.dispose();
+    address.dispose();
+    idNumber.dispose();
+    nrcNumber.dispose();
     super.dispose();
   }
 
   Future<DateTime?> pickDate(DateTime initial) => showDatePicker(
-    context: context,
-    initialDate: initial,
-    firstDate: DateTime(1900),
-    lastDate: DateTime.now(),
-  );
+        context: context,
+        initialDate: initial,
+        firstDate: DateTime(1900),
+        lastDate: DateTime.now(),
+      );
 
   String dateText(DateTime? d) {
     if (d == null) return 'dd/mm/yyyy';
     return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  }
+
+  String get composedNrc {
+    if (nrcState == null || nrcTownship == null || nrcNumber.text.length != 6) {
+      return '';
+    }
+    return '$nrcState/$nrcTownship($nrcCitizenType)${nrcNumber.text}';
   }
 
   void createMember() {
@@ -51,8 +85,19 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
       );
       return;
     }
+
+    if (idType == 'NRC') {
+      idNumber.text = composedNrc;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Member API will be connected next.')),
+      SnackBar(
+        content: Text(
+          idType == 'NRC'
+              ? 'NRC: ${idNumber.text}. Member API will be connected next.'
+              : 'Member API will be connected next.',
+        ),
+      ),
     );
   }
 
@@ -93,9 +138,21 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
                     Icons.badge_rounded,
                     'ID Information',
                     [
-                      dropdown('ID Type *', idType, ['NRC', 'Passport', 'Other'],
-                        (v) => setState(() => idType = v), required: true),
-                      textField(idNumber, 'ID Number *', required: true),
+                      dropdown(
+                        'ID Type *',
+                        idType,
+                        ['NRC', 'Passport', 'Driving License', 'Other'],
+                        (v) => setState(() {
+                          idType = v;
+                          idNumber.clear();
+                          nrcState = null;
+                          nrcTownship = null;
+                          nrcCitizenType = 'N';
+                          nrcNumber.clear();
+                        }),
+                        required: true,
+                      ),
+                      if (idType == 'NRC') ...nrcFields() else textField(idNumber, 'ID Number *', required: true),
                     ],
                   ),
                   section(
@@ -103,7 +160,8 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
                     'Membership Information',
                     [
                       dropdown('Member Type *', memberType, ['Silver', 'Gold', 'Platinum'],
-                        (v) => setState(() => memberType = v ?? 'Silver'), required: true),
+                          (v) => setState(() => memberType = v ?? 'Silver'),
+                          required: true),
                       dateField('Registration Date *', registrationDate, () async {
                         final d = await pickDate(registrationDate);
                         if (d != null) setState(() => registrationDate = d);
@@ -154,6 +212,85 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
     );
   }
 
+  List<Widget> nrcFields() {
+    final townships = nrcState == null ? <String>[] : (nrcTownships[nrcState] ?? <String>[]);
+
+    return [
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: dropdown(
+              'State/Region *',
+              nrcState,
+              List.generate(14, (index) => '${index + 1}'),
+              (v) => setState(() {
+                nrcState = v;
+                nrcTownship = null;
+              }),
+              required: true,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: dropdown(
+              'Township Code *',
+              nrcTownship,
+              townships,
+              (v) => setState(() => nrcTownship = v),
+              required: true,
+            ),
+          ),
+        ],
+      ),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: dropdown(
+              'Type *',
+              nrcCitizenType,
+              const ['N', 'E', 'P', 'T'],
+              (v) => setState(() => nrcCitizenType = v ?? 'N'),
+              required: true,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: TextFormField(
+              controller: nrcNumber,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: input('NRC Number *').copyWith(
+                counterText: '',
+                hintText: '123456',
+              ),
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'NRC Number is required.';
+                if (v.length != 6) return 'Enter 6 digits.';
+                return null;
+              },
+            ),
+          ),
+        ],
+      ),
+      if (composedNrc.isNotEmpty)
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            composedNrc,
+            style: const TextStyle(
+              color: green,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+    ];
+  }
+
   Widget section(IconData icon, String title, List<Widget> children) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -173,7 +310,9 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
               children: [
                 Icon(icon, color: green),
                 const SizedBox(width: 10),
-                Text(title, style: const TextStyle(color: Color(0xFF073F35), fontSize: 18, fontWeight: FontWeight.w800)),
+                Text(title,
+                    style: const TextStyle(
+                        color: Color(0xFF073F35), fontSize: 18, fontWeight: FontWeight.w800)),
               ],
             ),
           ),
@@ -198,14 +337,18 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
   }
 
   Widget dropdown(String label, String? value, List<String> values,
-      ValueChanged<String?> onChanged, {bool required = false}) {
+      ValueChanged<String?> onChanged,
+      {bool required = false}) {
     return DropdownButtonFormField<String>(
       value: value,
+      isExpanded: true,
       decoration: input(label),
       hint: const Text('Select'),
       items: values.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
       onChanged: onChanged,
-      validator: required ? (v) => v == null || v.isEmpty ? '${label.replaceAll(' *', '')} is required.' : null : null,
+      validator: required
+          ? (v) => v == null || v.isEmpty ? '${label.replaceAll(' *', '')} is required.' : null
+          : null,
     );
   }
 
@@ -227,18 +370,18 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
   }
 
   InputDecoration input(String label) => InputDecoration(
-    labelText: label,
-    filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Color(0xFF49504C)),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: green, width: 1.7),
-    ),
-  );
+        labelText: label,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFF49504C)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: green, width: 1.7),
+        ),
+      );
 }
