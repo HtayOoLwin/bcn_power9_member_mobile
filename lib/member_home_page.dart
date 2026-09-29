@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'auth_service.dart';
 import 'member_dashboard_service.dart';
 import 'member_history_service.dart';
+import 'membership_card_page.dart';
 
 class MemberHomePage extends StatefulWidget {
   const MemberHomePage({
@@ -66,10 +67,7 @@ class _MemberHomePageState extends State<MemberHomePage> {
         index: _index,
           children: [
             _home(),
-            const _ComingSoonPage(
-              icon: Icons.qr_code_2_rounded,
-              title: 'My Membership Card',
-            ),
+            MembershipCardPage(authService: widget.authService),
             _history(),
             _profile(),
           ],
