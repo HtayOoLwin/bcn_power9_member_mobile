@@ -261,9 +261,8 @@ class _MemberHomePageState extends State<MemberHomePage> {
             final title = tx.activity.isEmpty
                 ? (tx.earned ? 'Points Earned' : 'Points Redeemed')
                 : tx.activity;
-            final date = [tx.postingDate, tx.postingTime]
-                .where((v) => v.isNotEmpty)
-                .join(' ');
+            final date =
+                '${_hApiDate(tx.postingDate)}  ${_hTime(tx.postingTime)}';
             return _transaction(
               tx.earned ? Icons.add_circle : Icons.remove_circle,
               title,
