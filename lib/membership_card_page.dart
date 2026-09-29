@@ -99,8 +99,11 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                               ),
                             )
                           : Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                              child: SizedBox.expand(child: _membershipCard(_card!)),
+                              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: _membershipCard(_card!),
+                              ),
                             ),
             ),
           ],
@@ -114,7 +117,7 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: const [
           BoxShadow(color: Color(0x22000000), blurRadius: 18, offset: Offset(0, 8)),
         ],
@@ -123,7 +126,7 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 13),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -137,20 +140,20 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                 Row(
                   children: [
                     Container(
-                      width: 38,
-                      height: 38,
+                      width: 42,
+                      height: 42,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(13),
                       ),
-                      child: const Icon(Icons.local_gas_station_rounded, color: Colors.white, size: 24),
+                      child: const Icon(Icons.local_gas_station_rounded, color: Colors.white, size: 26),
                     ),
                     const SizedBox(width: 11),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('POWER 9', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900, letterSpacing: 0.8)),
+                          Text('POWER 9', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 0.8)),
                           Text('REWARD MEMBER', style: TextStyle(color: Color(0xFFD8F2E8), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
                         ],
                       ),
@@ -165,17 +168,17 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 20),
                 Text(
                   data.memberName,
-                  style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w900),
+                  style: const TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   data.memberId,
                   style: const TextStyle(color: Color(0xFFD6ECE5), fontSize: 12, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(child: _greenInfo('CURRENT POINTS', _points(data.currentPoints))),
@@ -188,12 +191,12 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
           Container(
             width: double.infinity,
             color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
             child: Column(
               children: [
                 if (data.qrData.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.all(7),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
@@ -202,19 +205,19 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                     child: QrImageView(
                       data: data.qrData,
                       version: QrVersions.auto,
-                      size: 145,
+                      size: 155,
                       backgroundColor: Colors.white,
                       errorCorrectionLevel: QrErrorCorrectLevel.M,
                     ),
                   )
                 else
                   const SizedBox(
-                    height: 145,
+                    height: 155,
                     child: Center(child: Text('QR data is not available.')),
                   ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 7),
                 const Text('Scan Membership Card', style: TextStyle(color: darkGreen, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 9),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(child: _detail('MEMBER SINCE', _date(data.registrationDate))),
@@ -222,9 +225,9 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                     Expanded(child: _detail('EXPIRY DATE', _date(data.expiryDate))),
                   ],
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE8F7EF),
                     borderRadius: BorderRadius.circular(20),
