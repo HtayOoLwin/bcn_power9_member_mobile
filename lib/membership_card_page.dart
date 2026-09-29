@@ -141,53 +141,55 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(13),
-                      ),
-                      child: const Icon(Icons.local_gas_station_rounded, color: Colors.white, size: 26),
-                    ),
-                    const SizedBox(width: 11),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('POWER 9', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 0.8)),
-                          Text('REWARD MEMBER', style: TextStyle(color: Color(0xFFD8F2E8), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
-                        ],
+                    Expanded(
+                      child: RichText(
+                        text: const TextSpan(
+                          children: [
+                            TextSpan(text: 'POWER ', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
+                            TextSpan(text: '9', style: TextStyle(color: Color(0xFF9DE65E), fontSize: 34, fontWeight: FontWeight.w900)),
+                          ],
+                        ),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(20)),
-                      child: Text(
-                        data.memberType.isEmpty ? 'MEMBER' : data.memberType.toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
-                      ),
+                    Column(
+                      children: [
+                        const Icon(Icons.workspace_premium_rounded, color: Color(0xFFF2D36D), size: 34),
+                        Text(
+                          data.memberType.isEmpty ? 'MEMBER' : data.memberType.toUpperCase(),
+                          style: const TextStyle(color: Color(0xFFF2D36D), fontSize: 11, fontWeight: FontWeight.w900),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const Text(
+                  'R E W A R D   M E M B E R',
+                  style: TextStyle(color: Color(0xFFF0CF79), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5),
+                ),
+                const SizedBox(height: 18),
                 Text(
                   data.memberName,
-                  style: const TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w900),
+                  style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w900),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  data.memberId,
-                  style: const TextStyle(color: Color(0xFFD6ECE5), fontSize: 12, fontWeight: FontWeight.w600),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFFFFEAA0), Color(0xFFE8BE55)]),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Text(
+                    '${data.memberType.isEmpty ? 'Member' : data.memberType} Member',
+                    style: const TextStyle(color: Color(0xFF164A37), fontSize: 12, fontWeight: FontWeight.w900),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(child: _greenInfo('CURRENT POINTS', _points(data.currentPoints))),
-                    Expanded(child: _greenInfo('CARD NUMBER', data.cardNumber)),
-                  ],
-                ),
+                const SizedBox(height: 12),
+                _cardInfoRow('Member ID', data.memberId),
+                _cardInfoRow('Current Points', _points(data.currentPoints)),
+                _cardInfoRow('Member Since', _date(data.registrationDate)),
+                _cardInfoRow('Expiry Date', _date(data.expiryDate)),
               ],
             ),
           ),
@@ -216,15 +218,7 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                   ),
                 const SizedBox(height: 7),
                 const Text('Scan to identify member', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(child: _detail('MEMBER SINCE', _date(data.registrationDate))),
-                    Container(width: 1, height: 34, color: const Color(0xFFE3E9E6)),
-                    Expanded(child: _detail('EXPIRY DATE', _date(data.expiryDate))),
-                  ],
-                ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                   decoration: BoxDecoration(
@@ -232,12 +226,21 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const CircleAvatar(radius: 4, backgroundColor: Color(0xFF079447)),
+                      const CircleAvatar(radius: 4, backgroundColor: Color(0xFF8EEB59)),
                       const SizedBox(width: 7),
+                      Expanded(
+                        child: Text(
+                          status.isEmpty ? 'Active Member' : '$status Member',
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      Container(width: 1, height: 20, color: const Color(0x668EEBBA)),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.monetization_on_rounded, color: Color(0xFF9DE65E), size: 20),
+                      const SizedBox(width: 5),
                       Text(
-                        status.isEmpty ? 'Active Member' : '$status Member',
+                        '${_points(data.currentPoints)} Points',
                         style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800),
                       ),
                     ],
@@ -250,6 +253,29 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
       ),
     );
   }
+
+  Widget _cardInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 112,
+            child: Text(label, style: const TextStyle(color: Color(0xFFC3D7D0), fontSize: 11, fontWeight: FontWeight.w500)),
+          ),
+          Expanded(
+            child: Text(
+              value.isEmpty ? '-' : value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _greenInfo(String label, String value) {
     return Column(
