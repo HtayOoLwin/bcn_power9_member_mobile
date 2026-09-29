@@ -64,7 +64,8 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                 gradient: LinearGradient(colors: [Color(0xFF008866), darkGreen]),
               ),
               child: const Text(
-                'My Membership Card',
+                'Membership Card',
+                textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
               ),
             ),
@@ -100,9 +101,12 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                             )
                           : Padding(
                               padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                              child: Align(
-                                alignment: Alignment.topCenter,
-                                child: _membershipCard(_card!),
+                              child: Column(
+                                children: [
+                                  Expanded(child: _membershipCard(_card!)),
+                                  const SizedBox(height: 8),
+                                  _securityNote(),
+                                ],
                               ),
                             ),
             ),
@@ -117,7 +121,12 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF003F2D), Color(0xFF087A49), Color(0xFF005338)],
+        ),
         boxShadow: const [
           BoxShadow(color: Color(0x22000000), blurRadius: 18, offset: Offset(0, 8)),
         ],
@@ -127,13 +136,7 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF078D6B), Color(0xFF004D42)],
-              ),
-            ),
+            color: Colors.transparent,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -190,18 +193,14 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
           ),
           Container(
             width: double.infinity,
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+            color: Colors.transparent,
+            padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
             child: Column(
               children: [
                 if (data.qrData.isNotEmpty)
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFE0E8E4)),
-                    ),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
                     child: QrImageView(
                       data: data.qrData,
                       version: QrVersions.auto,
@@ -216,7 +215,7 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                     child: Center(child: Text('QR data is not available.')),
                   ),
                 const SizedBox(height: 7),
-                const Text('Scan Membership Card', style: TextStyle(color: darkGreen, fontWeight: FontWeight.w800)),
+                const Text('Scan to identify member', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -229,7 +228,7 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F7EF),
+                    color: const Color(0xAA003D2C),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -239,7 +238,7 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                       const SizedBox(width: 7),
                       Text(
                         status.isEmpty ? 'Active Member' : '$status Member',
-                        style: const TextStyle(color: Color(0xFF067647), fontSize: 12, fontWeight: FontWeight.w800),
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800),
                       ),
                     ],
                   ),
@@ -266,10 +265,39 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
   Widget _detail(String label, String value) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(color: Color(0xFF8A9691), fontSize: 9, fontWeight: FontWeight.w700)),
+        Text(label, style: const TextStyle(color: Color(0xFFC3D7D0), fontSize: 9, fontWeight: FontWeight.w700)),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(color: Color(0xFF18332A), fontSize: 12, fontWeight: FontWeight.w800)),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
       ],
     );
   }
+
+  Widget _securityNote() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFD6E9DF)),
+      ),
+      child: const Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: Color(0xFFE6F7ED),
+            child: Icon(Icons.verified_user_rounded, color: Color(0xFF087A49), size: 21),
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'This QR Code is encrypted for secure verification.\nPlease present this code when making a purchase or earning points.',
+              style: TextStyle(color: Color(0xFF29433A), fontSize: 10.5, height: 1.25),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
