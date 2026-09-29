@@ -63,10 +63,7 @@ class _MemberHomePageState extends State<MemberHomePage> {
               icon: Icons.qr_code_2_rounded,
               title: 'My Membership Card',
             ),
-            const _ComingSoonPage(
-              icon: Icons.receipt_long_rounded,
-              title: 'Point History',
-            ),
+            _history(),
             _profile(),
           ],
         ),
@@ -307,6 +304,150 @@ class _MemberHomePageState extends State<MemberHomePage> {
               fontWeight: FontWeight.w800,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _history() {
+    return RefreshIndicator(
+      color: green,
+      onRefresh: _loadDashboard,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+        children: [
+          const Text(
+            'Point History',
+            style: TextStyle(
+              color: Color(0xFF102032),
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Your recent earn and redeem activity',
+            style: TextStyle(color: Color(0xFF718092), fontSize: 13),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0AA77B), Color(0xFF08745C)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Current Points',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Text(
+                  _points(_data?.profile.currentPointBalance ?? 0),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 22),
+          const Text(
+            'Transactions',
+            style: TextStyle(
+              color: Color(0xFF102032),
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 10),
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.all(30),
+              child: Center(child: CircularProgressIndicator(color: green)),
+            )
+          else if (_loadError != null)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    _loadError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
+                  const SizedBox(height: 6),
+                  TextButton(
+                    onPressed: _loadDashboard,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          else if (_data == null || _data!.transactions.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 36),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Column(
+                children: [
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 42,
+                    color: Color(0xFF9AA6B2),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'No point history yet.',
+                    style: TextStyle(color: Color(0xFF718092)),
+                  ),
+                ],
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(
+                children: _data!.transactions.map((tx) {
+                  final earned = tx.earned;
+                  final title = tx.activity.isEmpty
+                      ? (earned ? 'Points Earned' : 'Points Redeemed')
+                      : tx.activity;
+                  final date = [tx.postingDate, tx.postingTime]
+                      .where((value) => value.isNotEmpty)
+                      .join(' ');
+                  return _transaction(
+                    earned ? Icons.add_circle : Icons.remove_circle,
+                    title,
+                    date,
+                    '${earned ? '+' : '-'} ${_points(tx.points)}',
+                    earned,
+                  );
+                }).toList(),
+              ),
+            ),
         ],
       ),
     );
