@@ -53,58 +53,59 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      color: green,
-      onRefresh: _load,
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [Color(0xFF008866), darkGreen]),
-            ),
-            child: const Text(
-              'My Membership Card',
-              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
-            ),
-          ),
-          if (_loading)
-            const Padding(
-              padding: EdgeInsets.only(top: 120),
-              child: Center(child: CircularProgressIndicator(color: green)),
-            )
-          else if (_error != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 90, 24, 24),
-              child: Column(
-                children: [
-                  const Icon(Icons.cloud_off_rounded, size: 48, color: Color(0xFF82908A)),
-                  const SizedBox(height: 12),
-                  Text(_error!, textAlign: TextAlign.center),
-                  const SizedBox(height: 12),
-                  OutlinedButton(onPressed: _load, child: const Text('Retry')),
-                ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [Color(0xFF008866), darkGreen]),
               ),
-            )
-          else if (_card == null || !_card!.hasCard)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(24, 100, 24, 24),
-              child: Column(
-                children: [
-                  Icon(Icons.credit_card_off_rounded, size: 54, color: Color(0xFF82908A)),
-                  SizedBox(height: 12),
-                  Text('No membership card found.', style: TextStyle(fontWeight: FontWeight.w700)),
-                ],
+              child: const Text(
+                'My Membership Card',
+                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
               ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: _membershipCard(_card!),
             ),
-        ],
-      ),
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator(color: green))
+                  : _error != null
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.cloud_off_rounded, size: 48, color: Color(0xFF82908A)),
+                                const SizedBox(height: 12),
+                                Text(_error!, textAlign: TextAlign.center),
+                                const SizedBox(height: 12),
+                                OutlinedButton(onPressed: _load, child: const Text('Retry')),
+                              ],
+                            ),
+                          ),
+                        )
+                      : _card == null || !_card!.hasCard
+                          ? const Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.credit_card_off_rounded, size: 54, color: Color(0xFF82908A)),
+                                  SizedBox(height: 12),
+                                  Text('No membership card found.', style: TextStyle(fontWeight: FontWeight.w700)),
+                                ],
+                              ),
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                              child: SizedBox.expand(child: _membershipCard(_card!)),
+                            ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -122,7 +123,7 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 13),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -136,20 +137,20 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                 Row(
                   children: [
                     Container(
-                      width: 44,
-                      height: 44,
+                      width: 38,
+                      height: 38,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(13),
                       ),
-                      child: const Icon(Icons.local_gas_station_rounded, color: Colors.white, size: 28),
+                      child: const Icon(Icons.local_gas_station_rounded, color: Colors.white, size: 24),
                     ),
                     const SizedBox(width: 11),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('POWER 9', style: TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w900, letterSpacing: 0.8)),
+                          Text('POWER 9', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900, letterSpacing: 0.8)),
                           Text('REWARD MEMBER', style: TextStyle(color: Color(0xFFD8F2E8), fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.4)),
                         ],
                       ),
@@ -164,17 +165,17 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 14),
                 Text(
                   data.memberName,
-                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
+                  style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   data.memberId,
                   style: const TextStyle(color: Color(0xFFD6ECE5), fontSize: 12, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(child: _greenInfo('CURRENT POINTS', _points(data.currentPoints))),
@@ -187,12 +188,12 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
           Container(
             width: double.infinity,
             color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
             child: Column(
               children: [
                 if (data.qrData.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
@@ -201,19 +202,19 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                     child: QrImageView(
                       data: data.qrData,
                       version: QrVersions.auto,
-                      size: 190,
+                      size: 145,
                       backgroundColor: Colors.white,
                       errorCorrectionLevel: QrErrorCorrectLevel.M,
                     ),
                   )
                 else
                   const SizedBox(
-                    height: 190,
+                    height: 145,
                     child: Center(child: Text('QR data is not available.')),
                   ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 5),
                 const Text('Scan Membership Card', style: TextStyle(color: darkGreen, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 18),
+                const SizedBox(height: 9),
                 Row(
                   children: [
                     Expanded(child: _detail('MEMBER SINCE', _date(data.registrationDate))),
@@ -223,7 +224,7 @@ class _MembershipCardPageState extends State<MembershipCardPage> {
                 ),
                 const SizedBox(height: 18),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE8F7EF),
                     borderRadius: BorderRadius.circular(20),
