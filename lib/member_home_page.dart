@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'auth_service.dart';
 import 'member_dashboard_service.dart';
 import 'member_history_service.dart';
+import 'member_card_service.dart';
 import 'membership_card_page.dart';
 
 class MemberHomePage extends StatefulWidget {
@@ -32,6 +33,9 @@ class _MemberHomePageState extends State<MemberHomePage> {
   DateTime? _fromDate;
   DateTime? _toDate;
   int _historyTab = 0;
+  MemberCardData? _profileCard;
+  bool _profileLoading = false;
+  String? _profileError;
 
   @override
   void initState() {
@@ -75,7 +79,7 @@ class _MemberHomePageState extends State<MemberHomePage> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (value) { setState(() => _index = value); if (value == 2 && _historyRows.isEmpty) _loadHistory(); },
+        onDestinationSelected: (value) { setState(() => _index = value); if (value == 2 && _historyRows.isEmpty) _loadHistory(); if (value == 3 && _profileCard == null && !_profileLoading) _loadProfile(); },
         indicatorColor: mint,
         backgroundColor: Colors.white,
         destinations: const [
@@ -368,44 +372,156 @@ class _MemberHomePageState extends State<MemberHomePage> {
       ]))
     ]));
   }
+  Future<void> _loadProfile() async {
+    setState(() { _profileLoading = true; _profileError = null; });
+    final result = await MemberCardService(widget.authService).load();
+    if (!mounted) return;
+    setState(() {
+      _profileLoading = false;
+      _profileCard = result.data;
+      _profileError = result.success ? null : result.message;
+    });
+  }
+
   Widget _profile() {
-    return ListView(
-      padding: const EdgeInsets.all(18),
-      children: [
-        const SizedBox(height: 12),
-        const CircleAvatar(
-          radius: 46,
-          backgroundColor: mint,
-          child: Icon(Icons.person_rounded, size: 56, color: darkGreen),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          widget.fullName,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'POWER 9 Member',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Color(0xFF718092)),
-        ),
-        const SizedBox(height: 26),
-        _profileTile(Icons.description_outlined, 'Terms & Conditions'),
-        _profileTile(Icons.privacy_tip_outlined, 'Privacy Policy'),
-        _profileTile(Icons.info_outline_rounded, 'About'),
-        const SizedBox(height: 12),
-        ListTile(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          tileColor: Colors.white,
-          leading: const Icon(Icons.logout_rounded, color: Colors.red),
-          title: const Text(
-            'Logout',
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700),
+    if (_profileLoading) return const Center(child: CircularProgressIndicator(color: green));
+    if (_profileError != null) {
+      return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Text(_profileError!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent)),
+        const SizedBox(height: 8),
+        TextButton(onPressed: _loadProfile, child: const Text('Retry')),
+      ]));
+    }
+    final p = _profileCard;
+    return RefreshIndicator(
+      color: green,
+      onRefresh: _loadProfile,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF087044), darkGreen])),
+            child: const Text('Profile', textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w900)),
           ),
-          onTap: _confirmLogout,
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 22),
+            child: Column(children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFF00543C), Color(0xFF078452), Color(0xFF004D39)]),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(children: [
+                  const CircleAvatar(radius: 39, backgroundColor: Color(0xFFE8F6F0),
+                    child: Icon(Icons.person_rounded, color: green, size: 48)),
+                  const SizedBox(width: 15),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(p?.memberName.isNotEmpty == true ? p!.memberName : widget.fullName,
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 3),
+                    Text(p?.memberId ?? '-', style: const TextStyle(color: Colors.white, fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [Color(0xFFFFEAA0), Color(0xFFE8BE55)]),
+                        borderRadius: BorderRadius.circular(18)),
+                      child: Text('${p?.memberType.isNotEmpty == true ? p!.memberType : 'Member'} Member',
+                        style: const TextStyle(color: darkGreen, fontWeight: FontWeight.w900)),
+                    ),
+                  ])),
+                  const SizedBox(width: 8),
+                  Column(children: [
+                    const Icon(Icons.workspace_premium_rounded, color: Color(0xFFF1D16A), size: 31),
+                    Text((p?.memberType ?? 'Member').toUpperCase(),
+                      style: const TextStyle(color: Color(0xFFF1D16A), fontSize: 11, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                      decoration: BoxDecoration(color: const Color(0xAA004632), borderRadius: BorderRadius.circular(16)),
+                      child: Row(children: [
+                        const CircleAvatar(radius: 4, backgroundColor: Color(0xFF78E85B)),
+                        const SizedBox(width: 5),
+                        Text(p?.memberStatus.isNotEmpty == true ? p!.memberStatus : '-',
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
+                      ]),
+                    ),
+                  ]),
+                ]),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 15, 16, 8),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFE1E8E4))),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Row(children: [
+                    CircleAvatar(radius: 18, backgroundColor: mint, child: Icon(Icons.person_rounded, color: green, size: 20)),
+                    SizedBox(width: 10),
+                    Text('Member Information', style: TextStyle(color: darkGreen, fontSize: 18, fontWeight: FontWeight.w900)),
+                  ]),
+                  const SizedBox(height: 9),
+                  _profileInfo(Icons.person_outline_rounded, 'Member Name', p?.memberName ?? widget.fullName),
+                  _profileInfo(Icons.badge_outlined, 'Member ID', p?.memberId ?? '-'),
+                  _profileInfo(Icons.verified_user_outlined, 'Status', p?.memberStatus ?? '-'),
+                  _profileInfo(Icons.workspace_premium_outlined, 'Member Type', p?.memberType ?? '-'),
+                  _profileInfo(Icons.phone_outlined, 'Phone', _data?.profile.phone ?? '-'),
+                  _profileInfo(Icons.email_outlined, 'Email', _data?.profile.email ?? '-'),
+                  _profileInfo(Icons.calendar_month_outlined, 'Registration Date', _profileDate(p?.registrationDate ?? '')),
+                  _profileInfo(Icons.event_outlined, 'Membership Expiry Date', _profileDate(p?.expiryDate ?? '')),
+                  _profileInfo(Icons.monetization_on_outlined, 'Current Point Balance', _points(p?.currentPoints ?? 0)),
+                  _profileInfo(Icons.qr_code_2_rounded, 'Card Number', p?.cardNumber ?? '-'),
+                ]),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFE1E8E4))),
+                child: Column(children: [
+                  _profileTile(Icons.description_outlined, 'Terms & Conditions'),
+                  _profileTile(Icons.privacy_tip_outlined, 'Privacy Policy'),
+                  _profileTile(Icons.info_outline_rounded, 'About'),
+                ]),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                tileColor: Colors.white,
+                leading: const Icon(Icons.logout_rounded, color: Colors.red),
+                title: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700)),
+                trailing: const Icon(Icons.chevron_right_rounded, color: Colors.red),
+                onTap: _confirmLogout,
+              ),
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _profileDate(String value) {
+    if (value.isEmpty) return '-';
+    final d = DateTime.tryParse(value);
+    return d == null ? value : _hDate(d);
+  }
+
+  Widget _profileInfo(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFEDF0EE)))),
+      child: Row(children: [
+        SizedBox(width: 30, child: Icon(icon, size: 19, color: Color(0xFF53615C))),
+        const SizedBox(width: 8),
+        SizedBox(width: 142, child: Text(label, style: const TextStyle(color: Color(0xFF68736F), fontSize: 12))),
+        Expanded(child: Text(value.isEmpty ? '-' : value,
+          style: const TextStyle(color: darkGreen, fontSize: 12, fontWeight: FontWeight.w800))),
+      ]),
     );
   }
 
