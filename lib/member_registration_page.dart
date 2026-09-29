@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'member_registration_service.dart';
+
 class MemberRegistrationPage extends StatefulWidget {
   const MemberRegistrationPage({super.key});
 
@@ -46,6 +48,8 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
   String memberType = 'Silver';
   DateTime? dob;
   DateTime registrationDate = DateTime.now();
+  final registrationService = MemberRegistrationService();
+  bool isSubmitting = false;
 
   @override
   void dispose() {
@@ -77,8 +81,14 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
     return '$nrcState/$nrcTownship($nrcCitizenType)${nrcNumber.text}';
   }
 
-  void createMember() {
+  String serverDate(DateTime? date) {
+    if (date == null) return '';
+    return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> createMember() async {
     FocusScope.of(context).unfocus();
+
     if (!(formKey.currentState?.validate() ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please complete all required fields.')),
@@ -86,19 +96,58 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
       return;
     }
 
-    if (idType == 'NRC') {
-      idNumber.text = composedNrc;
+    if (isSubmitting) return;
+
+    final finalIdNumber = idType == 'NRC' ? composedNrc : idNumber.text.trim();
+
+    setState(() => isSubmitting = true);
+
+    final result = await registrationService.register(
+      memberName: name.text,
+      phone: phone.text,
+      email: email.text,
+      gender: gender ?? '',
+      nationality: nationality ?? '',
+      address: address.text,
+      dateOfBirth: serverDate(dob),
+      idType: idType ?? '',
+      idNumber: finalIdNumber,
+      memberType: memberType,
+    );
+
+    if (!mounted) return;
+    setState(() => isSubmitting = false);
+
+    if (!result.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.message)),
+      );
+      return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.check_circle_rounded, color: green, size: 52),
+        title: const Text('Registration Successful'),
         content: Text(
-          idType == 'NRC'
-              ? 'NRC: ${idNumber.text}. Member API will be connected next.'
-              : 'Member API will be connected next.',
+          result.memberId.isEmpty
+              ? result.message
+              : '${result.message}\n\nMember ID: ${result.memberId}',
+          textAlign: TextAlign.center,
         ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            style: FilledButton.styleFrom(backgroundColor: green),
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
+
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -193,13 +242,22 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
                     Expanded(
                       child: FilledButton(
                         key: const Key('create_member_button'),
-                        onPressed: createMember,
+                        onPressed: isSubmitting ? null : createMember,
                         style: FilledButton.styleFrom(
                           backgroundColor: green,
                           minimumSize: const Size.fromHeight(52),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                         ),
-                        child: const Text('Create Member', style: TextStyle(fontWeight: FontWeight.w700)),
+                        child: isSubmitting
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.4,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Create Member', style: TextStyle(fontWeight: FontWeight.w700)),
                       ),
                     ),
                   ],
