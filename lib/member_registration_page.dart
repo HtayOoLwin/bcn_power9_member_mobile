@@ -30,11 +30,42 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
   String? nrcState;
   String? nrcTownship;
   String nrcCitizenType = 'N';
-  String memberType = 'Silver';
+  String? memberType;
+  List<String> memberTypes = const [];
+  bool isLoadingMemberTypes = true;
+  String? memberTypeError;
   DateTime? dob;
   DateTime registrationDate = DateTime.now();
   final registrationService = MemberRegistrationService();
   bool isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    loadMemberTypes();
+  }
+
+  Future<void> loadMemberTypes() async {
+    setState(() {
+      isLoadingMemberTypes = true;
+      memberTypeError = null;
+    });
+
+    final result = await registrationService.getMemberTypes();
+    if (!mounted) return;
+
+    setState(() {
+      isLoadingMemberTypes = false;
+      if (result.success) {
+        memberTypes = result.memberTypes;
+        memberType = memberTypes.isNotEmpty ? memberTypes.first : null;
+      } else {
+        memberTypes = const [];
+        memberType = null;
+        memberTypeError = result.message;
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -97,7 +128,7 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
       dateOfBirth: serverDate(dob),
       idType: idType ?? '',
       idNumber: finalIdNumber,
-      memberType: memberType,
+      memberType: memberType ?? '',
     );
 
     if (!mounted) return;
@@ -193,13 +224,45 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
                     Icons.groups_rounded,
                     'Membership Information',
                     [
-                      dropdown('Member Type *', memberType, ['Silver', 'Gold', 'Platinum'],
-                          (v) => setState(() => memberType = v ?? 'Silver'),
-                          required: true),
-                      dateField('Registration Date *', registrationDate, () async {
-                        final d = await pickDate(registrationDate);
-                        if (d != null) setState(() => registrationDate = d);
-                      }),
+                      if (isLoadingMemberTypes)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              SizedBox(width: 10),
+                              Text('Loading member types...'),
+                            ],
+                          ),
+                        )
+                      else if (memberTypeError != null)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                memberTypeError!,
+                                style: const TextStyle(color: Colors.redAccent),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: loadMemberTypes,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        )
+                      else
+                        dropdown(
+                          'Member Type *',
+                          memberType,
+                          memberTypes,
+                          (v) => setState(() => memberType = v),
+                          required: true,
+                        ),
+                      readOnlyDateField('Registration Date *', registrationDate),
                     ],
                   ),
                 ],
@@ -408,6 +471,38 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
             Text(dateText(date), style: const TextStyle(fontSize: 16)),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget readOnlyDateField(String label, DateTime date) {
+    return InputDecorator(
+      decoration: input(label).copyWith(
+        filled: true,
+        fillColor: const Color(0xFFF1F3F2),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.calendar_month_rounded,
+            size: 22,
+            color: Color(0xFF7A8580),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            dateText(date),
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color(0xFF5F6965),
+            ),
+          ),
+          const Spacer(),
+          const Icon(
+            Icons.lock_outline_rounded,
+            size: 18,
+            color: Color(0xFF7A8580),
+          ),
+        ],
       ),
     );
   }
