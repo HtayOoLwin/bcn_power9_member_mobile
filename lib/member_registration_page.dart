@@ -11,7 +11,7 @@ class MemberRegistrationPage extends StatefulWidget {
   State<MemberRegistrationPage> createState() => _MemberRegistrationPageState();
 }
 
-class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
+class _MemberRegistrationPageState extends State<MemberRegistrationPage> with WidgetsBindingObserver {
   static const green = Color(0xFF006B50);
   static const mint = Color(0xFFE6F5EF);
 
@@ -23,6 +23,7 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
   final address = TextEditingController();
   final idNumber = TextEditingController();
   final nrcNumber = TextEditingController();
+  final nrcNumberFocusNode = FocusNode();
 
   String? gender;
   String? nationality;
@@ -42,7 +43,16 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     loadMemberTypes();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      registrationDate = DateTime.now();
+      loadMemberTypes();
+    }
   }
 
   Future<void> loadMemberTypes() async {
@@ -69,12 +79,14 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     name.dispose();
     phone.dispose();
     email.dispose();
     address.dispose();
     idNumber.dispose();
     nrcNumber.dispose();
+    nrcNumberFocusNode.dispose();
     super.dispose();
   }
 
@@ -106,9 +118,18 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
     FocusScope.of(context).unfocus();
 
     if (!(formKey.currentState?.validate() ?? false)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all required fields.')),
-      );
+      if (idType == 'NRC' && nrcNumber.text.length != 6) {
+        nrcNumberFocusNode.requestFocus();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('NRC Number must be exactly 6 digits. Please enter it again.'),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please complete all required fields.')),
+        );
+      }
       return;
     }
 
@@ -180,8 +201,11 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
         child: Column(
           children: [
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(16),
+              child: RefreshIndicator(
+                onRefresh: loadMemberTypes,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
                 children: [
                   section(
                     Icons.person_rounded,
@@ -265,7 +289,8 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
                       readOnlyDateField('Registration Date *', registrationDate),
                     ],
                   ),
-                ],
+                  ],
+                ),
               ),
             ),
             SafeArea(
@@ -367,8 +392,10 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
             flex: 2,
             child: TextFormField(
               controller: nrcNumber,
+              focusNode: nrcNumberFocusNode,
               keyboardType: TextInputType.number,
               maxLength: 6,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: input('NRC Number *').copyWith(
                 counterText: '',
