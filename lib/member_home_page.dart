@@ -5,6 +5,7 @@ import 'member_dashboard_service.dart';
 import 'member_history_service.dart';
 import 'member_card_service.dart';
 import 'membership_card_page.dart';
+import 'about_page.dart';
 
 class MemberHomePage extends StatefulWidget {
   const MemberHomePage({
@@ -485,8 +486,17 @@ class _MemberHomePageState extends State<MemberHomePage> {
                   border: Border.all(color: const Color(0xFFE1E8E4))),
                 child: Column(children: [
                   _profileTile(Icons.description_outlined, 'Terms & Conditions'),
-                  _profileTile(Icons.privacy_tip_outlined, 'Privacy Policy'),
-                  _profileTile(Icons.info_outline_rounded, 'About'),
+                  _profileTile(
+                    Icons.info_outline_rounded,
+                    'About',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AboutPage(),
+                        ),
+                      );
+                    },
+                  ),
                 ]),
               ),
               const SizedBox(height: 12),
@@ -525,7 +535,11 @@ class _MemberHomePageState extends State<MemberHomePage> {
     );
   }
 
-  Widget _profileTile(IconData icon, String title) {
+  Widget _profileTile(
+    IconData icon,
+    String title, {
+    VoidCallback? onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: ListTile(
@@ -534,7 +548,7 @@ class _MemberHomePageState extends State<MemberHomePage> {
         leading: Icon(icon, color: darkGreen),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         trailing: const Icon(Icons.chevron_right_rounded),
-        onTap: () {},
+        onTap: onTap,
       ),
     );
   }
