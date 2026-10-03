@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'member_registration_service.dart';
+import 'nrc_township_codes.dart';
 
 class MemberRegistrationPage extends StatefulWidget {
   const MemberRegistrationPage({super.key});
@@ -14,22 +15,6 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
   static const green = Color(0xFF006B50);
   static const mint = Color(0xFFE6F5EF);
 
-  static const Map<String, List<String>> nrcTownships = {
-    '1': ['KAPATA', 'KHAPANA', 'MAPATA', 'MAPANA', 'WAMANA'],
-    '2': ['BALAKHA', 'DAMASA', 'LACANA', 'PHASANA', 'YATANA'],
-    '3': ['BAANA', 'KAKAYA', 'KADANA', 'KASAKA', 'LATHANA', 'THATANA'],
-    '4': ['HAKHANA', 'KAPALA', 'MATANA', 'PALAWA', 'TATANA', 'TAZANA'],
-    '5': ['AYATA', 'BAMANA', 'KALANA', 'KATHANA', 'MAMANA', 'SAKANA', 'YAMAPA'],
-    '6': ['KATHANA', 'KASANA', 'LATANA', 'MATANA', 'THAYAKHA'],
-    '7': ['BAMANA', 'KAPAKA', 'KAWANA', 'LATANA', 'NATALA', 'PAMANA', 'YAKANA'],
-    '8': ['AHLANA', 'GAGANA', 'KAMANA', 'MATANA', 'MINANA', 'PAKHANA', 'SATAYA'],
-    '9': ['AMAYA', 'KAPATA', 'MAHAMA', 'MAKANA', 'MATAYA', 'PATAYA', 'TAKANA'],
-    '10': ['BALANA', 'KAMAYA', 'KATHANA', 'MALAMA', 'THAPHAYA', 'YAMANA'],
-    '11': ['KAPHANA', 'KATANA', 'MAPANA', 'MATANA', 'SATANA', 'YATHATA'],
-    '12': ['AHLANA', 'BATAHTA', 'DAGANA', 'DAGASA', 'KAMANA', 'KAMAYA', 'LAMANA', 'MAYAKA', 'PABATA', 'TAKANA', 'YAKANA'],
-    '13': ['HAHANA', 'KAHANA', 'KAKHANA', 'KALANA', 'LATANA', 'MAHAYA', 'TAYANA'],
-    '14': ['AMANA', 'BATHALA', 'DADAYA', 'HATHATA', 'KAKHANA', 'LAMANA', 'MAPANA', 'PATANA'],
-  };
 
   final formKey = GlobalKey<FormState>();
   final name = TextEditingController();
@@ -271,7 +256,7 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> {
   }
 
   List<Widget> nrcFields() {
-    final townships = nrcState == null ? <String>[] : (nrcTownships[nrcState] ?? <String>[]);
+    final townships = nrcState == null ? <String>[] : nrcTownshipsForState(nrcState!);
 
     return [
       Row(
