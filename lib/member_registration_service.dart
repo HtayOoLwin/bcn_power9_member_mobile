@@ -18,8 +18,82 @@ class MemberRegistrationResult {
   final String memberId;
 }
 
+class MemberTypeOptionsResult {
+  const MemberTypeOptionsResult.success(this.memberTypes)
+      : success = true,
+        message = null;
+
+  const MemberTypeOptionsResult.failure(this.message)
+      : success = false,
+        memberTypes = const [];
+
+  final bool success;
+  final String? message;
+  final List<String> memberTypes;
+}
+
 class MemberRegistrationService {
   final HttpClient _client = HttpClient();
+
+  Future<MemberTypeOptionsResult> getMemberTypes() async {
+    try {
+      final request = await _client.getUrl(
+        Uri.parse(
+          '${MemberAuthService.baseUrl}/api/method/bcn_point_management_system.api.legacy.bcn_v9_public_registration_options',
+        ),
+      );
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+
+      final response = await request.close();
+      final body = await utf8.decoder.bind(response).join();
+      final payload = _decode(body);
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return MemberTypeOptionsResult.failure(
+          _error(payload) ?? 'Unable to load member types.',
+        );
+      }
+
+      final message = payload['message'];
+      if (message is! Map) {
+        return const MemberTypeOptionsResult.failure(
+          'Invalid member type response.',
+        );
+      }
+
+      final data = Map<String, dynamic>.from(message);
+      final rawTypes = data['member_types'];
+      final memberTypes = <String>[];
+
+      if (rawTypes is List) {
+        for (final raw in rawTypes) {
+          if (raw is Map) {
+            final row = Map<String, dynamic>.from(raw);
+            final value =
+                (row['name'] ?? row['member_type_name'] ?? '').toString().trim();
+            if (value.isNotEmpty && !memberTypes.contains(value)) {
+              memberTypes.add(value);
+            }
+          } else {
+            final value = raw.toString().trim();
+            if (value.isNotEmpty && !memberTypes.contains(value)) {
+              memberTypes.add(value);
+            }
+          }
+        }
+      }
+
+      return MemberTypeOptionsResult.success(memberTypes);
+    } on SocketException {
+      return const MemberTypeOptionsResult.failure(
+        'Unable to connect to Power 9 server.',
+      );
+    } catch (_) {
+      return const MemberTypeOptionsResult.failure(
+        'Unable to load member types right now.',
+      );
+    }
+  }
 
   Future<MemberRegistrationResult> register({
     required String memberName,
