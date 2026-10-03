@@ -39,7 +39,7 @@ class MemberRegistrationService {
     try {
       final request = await _client.getUrl(
         Uri.parse(
-          '${MemberAuthService.baseUrl}/api/method/bcn_point_management_system.api.legacy.bcn_v9_public_registration_options',
+          '${MemberAuthService.baseUrl}/api/method/power9_member_register?action=options',
         ),
       );
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
