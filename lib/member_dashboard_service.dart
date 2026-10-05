@@ -156,7 +156,7 @@ class MemberDashboardService {
     String path, {
     Map<String, String>? query,
   }) async {
-    final uri = Uri.parse(MemberAuthService.baseUrl)
+    final uri = Uri.parse(authService.currentBaseUrl)
         .resolve(path)
         .replace(queryParameters: query);
     final client = HttpClient();
