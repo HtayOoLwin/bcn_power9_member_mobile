@@ -76,7 +76,7 @@ class MemberCardService {
     try {
       final client = HttpClient();
       final request = await client.getUrl(
-        Uri.parse('${MemberAuthService.baseUrl}/api/method/power9_member_card'),
+        Uri.parse('${authService.currentBaseUrl}/api/method/power9_member_card'),
       );
       request.cookies.addAll(authService.sessionCookies);
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
