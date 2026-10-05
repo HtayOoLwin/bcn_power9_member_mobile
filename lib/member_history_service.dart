@@ -46,7 +46,7 @@ class MemberHistoryService {
         query['direction'] = direction;
       }
 
-      final uri = Uri.parse(MemberAuthService.baseUrl)
+      final uri = Uri.parse(authService.currentBaseUrl)
           .resolve(_path)
           .replace(queryParameters: query);
       final client = HttpClient();
