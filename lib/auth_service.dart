@@ -16,19 +16,60 @@ class LoginResult {
 
 class MemberAuthService {
   static const baseUrl = 'https://power9-member.s.frappe.cloud';
+  static const bcnclBaseUrl = 'https://power9-dev.s.frappe.cloud';
 
   final HttpClient _client = HttpClient();
+  Uri _baseUri = Uri.parse(baseUrl);
   List<Cookie> _sessionCookies = const [];
 
   List<Cookie> get sessionCookies => List.unmodifiable(_sessionCookies);
+  String get currentBaseUrl => _baseUri.toString();
+  String get connectedServer => _baseUri.host;
 
   Future<LoginResult> login({
     required String user,
     required String password,
   }) async {
     try {
+      var loginUser = user.trim();
+      _baseUri = _baseUriForIdentifier(loginUser);
+
+      final isPhone = RegExp(r'^09[0-9]+$').hasMatch(loginUser);
+      if (isPhone) {
+        final resolveUri = _baseUri
+            .resolve('/api/method/power9_resolve_login_identifier')
+            .replace(queryParameters: {'identifier': loginUser});
+
+        final resolveRequest = await _client.getUrl(resolveUri);
+        resolveRequest.headers.set(HttpHeaders.acceptHeader, 'application/json');
+        final resolveResponse = await resolveRequest.close();
+        final resolveBody = await utf8.decoder.bind(resolveResponse).join();
+        final resolvePayload = _decode(resolveBody);
+
+        if (resolveResponse.statusCode < 200 ||
+            resolveResponse.statusCode >= 300) {
+          return LoginResult.failure(
+            _error(resolvePayload) ?? 'Invalid phone number.',
+          );
+        }
+
+        final message = resolvePayload['message'];
+        if (message is! Map || message['user'] == null) {
+          return const LoginResult.failure(
+            'Unable to find a user for this phone number.',
+          );
+        }
+
+        loginUser = message['user'].toString().trim();
+        if (loginUser.isEmpty) {
+          return const LoginResult.failure(
+            'Unable to find a user for this phone number.',
+          );
+        }
+      }
+
       final request = await _client.postUrl(
-        Uri.parse('$baseUrl/api/method/login'),
+        _baseUri.resolve('/api/method/login'),
       );
       request.headers.contentType = ContentType(
         'application',
@@ -39,7 +80,7 @@ class MemberAuthService {
       request.write(
         Uri(
           queryParameters: {
-            'usr': user.trim(),
+            'usr': loginUser,
             'pwd': password,
           },
         ).query,
@@ -52,12 +93,13 @@ class MemberAuthService {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         _sessionCookies = response.cookies;
         return LoginResult.success(
-          fullName: (payload['full_name'] ?? user.trim()).toString(),
+          fullName: (payload['full_name'] ?? loginUser).toString(),
         );
       }
 
       return LoginResult.failure(
-        _error(payload) ?? 'Invalid email or password.',
+        _error(payload) ??
+            'Invalid email, username, phone number, or password.',
       );
     } on SocketException {
       return const LoginResult.failure(
@@ -77,7 +119,7 @@ class MemberAuthService {
   Future<void> logout() async {
     try {
       final request = await _client.getUrl(
-        Uri.parse('$baseUrl/api/method/logout'),
+        _baseUri.resolve('/api/method/logout'),
       );
       request.cookies.addAll(_sessionCookies);
       await request.close();
@@ -86,6 +128,14 @@ class MemberAuthService {
     } finally {
       _sessionCookies = const [];
     }
+  }
+
+  Uri _baseUriForIdentifier(String identifier) {
+    final value = identifier.trim().toLowerCase();
+    if (value.contains('@') && value.endsWith('@bcncl.com')) {
+      return Uri.parse(bcnclBaseUrl);
+    }
+    return Uri.parse(baseUrl);
   }
 
   Map<String, dynamic> _decode(String body) {
