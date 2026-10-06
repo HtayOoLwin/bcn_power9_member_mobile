@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'member_registration_page.dart';
 import 'auth_service.dart';
 import 'member_home_page.dart';
+import 'forgot_password_page.dart';
 
 void main() => runApp(const Power9MemberApp());
 
@@ -403,7 +404,16 @@ class _LoginPageState extends State<LoginPage> {
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => ForgotPasswordPage(
+                            authService: _authService,
+                            initialEmail: _userController.text.trim(),
+                          ),
+                        ),
+                      );
+                    },
                     child: Text(
                       'Forgot Password?',
                       style: TextStyle(
