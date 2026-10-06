@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'member_registration_page.dart';
 import 'auth_service.dart';
@@ -87,21 +92,39 @@ class _LoginPageState extends State<LoginPage> {
     final result = await _authService.restoreSession();
     if (!mounted) return;
 
-    setState(() => _isRestoringSession = false);
-
-    if (result != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => MemberHomePage(
-              fullName: result.fullName,
-              authService: _authService,
-            ),
-          ),
-        );
-      });
+    if (result == null) {
+      setState(() => _isRestoringSession = false);
+      return;
     }
+
+    await _continueAfterAuthentication(result.fullName);
+
+    if (mounted) {
+      setState(() => _isRestoringSession = false);
+    }
+  }
+
+  Future<void> _continueAfterAuthentication(String fullName) async {
+    final decision = await _MemberAppVersionService().check(_authService);
+    if (!mounted) return;
+
+    if (decision.isRequired) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => _UpdateRequiredPage(decision: decision),
+        ),
+      );
+      return;
+    }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => MemberHomePage(
+          fullName: fullName,
+          authService: _authService,
+        ),
+      ),
+    );
   }
 
   @override
@@ -138,14 +161,7 @@ class _LoginPageState extends State<LoginPage> {
     await _authService.persistSession(rememberMe: _rememberMe);
     if (!mounted) return;
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => MemberHomePage(
-          fullName: result.fullName,
-          authService: _authService,
-        ),
-      ),
-    );
+    await _continueAfterAuthentication(result.fullName);
   }
 
   @override
@@ -579,6 +595,440 @@ class _LoginPageState extends State<LoginPage> {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
       borderSide: BorderSide(color: color, width: width),
+    );
+  }
+}
+
+
+enum _AppUpdateStatus { current, optional, required, unavailable }
+
+class _AppUpdateInfo {
+  const _AppUpdateInfo({
+    required this.latestVersion,
+    required this.minSupportedVersion,
+    required this.forceUpdate,
+    required this.updateMessage,
+    required this.androidUrl,
+    required this.iosUrl,
+  });
+
+  factory _AppUpdateInfo.fromJson(Map<String, dynamic> json) {
+    return _AppUpdateInfo(
+      latestVersion: (json['latest_version'] ?? '').toString().trim(),
+      minSupportedVersion:
+          (json['min_supported_version'] ?? '').toString().trim(),
+      forceUpdate: _boolValue(json['force_update']),
+      updateMessage: (json['update_message'] ?? '').toString().trim(),
+      androidUrl: (json['android_url'] ?? '').toString().trim(),
+      iosUrl: (json['ios_url'] ?? '').toString().trim(),
+    );
+  }
+
+  final String latestVersion;
+  final String minSupportedVersion;
+  final bool forceUpdate;
+  final String updateMessage;
+  final String androidUrl;
+  final String iosUrl;
+
+  String get message => updateMessage.isEmpty
+      ? 'A new POWER 9 Member App update is available.'
+      : updateMessage;
+
+  String get updateUrl {
+    if (Platform.isIOS && iosUrl.isNotEmpty) {
+      return iosUrl;
+    }
+    return androidUrl;
+  }
+
+  static bool _boolValue(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+
+    final normalized = value?.toString().trim().toLowerCase();
+    return normalized == '1' ||
+        normalized == 'true' ||
+        normalized == 'yes' ||
+        normalized == 'on';
+  }
+}
+
+class _AppUpdateDecision {
+  const _AppUpdateDecision({
+    required this.status,
+    required this.currentVersion,
+    this.info,
+  });
+
+  final _AppUpdateStatus status;
+  final String currentVersion;
+  final _AppUpdateInfo? info;
+
+  bool get isRequired => status == _AppUpdateStatus.required;
+
+  String get message => info?.message ??
+      'A new POWER 9 Member App update is required.';
+
+  String get updateUrl => info?.updateUrl ?? '';
+}
+
+class _MemberAppVersionService {
+  static const String _settingsDoctype =
+      'Member App Version Control Settings';
+
+  Future<_AppUpdateDecision> check(MemberAuthService authService) async {
+    String currentVersion = '';
+
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      currentVersion = packageInfo.version.trim();
+
+      final info = await _fetchSettings(authService);
+      final current = _AppVersion.parse(currentVersion);
+      final latest = _AppVersion.parse(info.latestVersion);
+      final minimum = _AppVersion.parse(info.minSupportedVersion);
+
+      if (!current.isValid) {
+        return _AppUpdateDecision(
+          status: _AppUpdateStatus.unavailable,
+          currentVersion: currentVersion,
+        );
+      }
+
+      final belowMinimum =
+          minimum.isValid && current.compareTo(minimum) < 0;
+      final belowLatest =
+          latest.isValid && current.compareTo(latest) < 0;
+
+      if (belowMinimum || (info.forceUpdate && belowLatest)) {
+        return _AppUpdateDecision(
+          status: _AppUpdateStatus.required,
+          currentVersion: currentVersion,
+          info: info,
+        );
+      }
+
+      if (belowLatest) {
+        return _AppUpdateDecision(
+          status: _AppUpdateStatus.optional,
+          currentVersion: currentVersion,
+          info: info,
+        );
+      }
+
+      return _AppUpdateDecision(
+        status: _AppUpdateStatus.current,
+        currentVersion: currentVersion,
+        info: info,
+      );
+    } catch (_) {
+      // Fail open if version settings cannot be reached, so a temporary
+      // server/network problem does not permanently lock members out.
+      return _AppUpdateDecision(
+        status: _AppUpdateStatus.unavailable,
+        currentVersion: currentVersion,
+      );
+    }
+  }
+
+  Future<_AppUpdateInfo> _fetchSettings(
+    MemberAuthService authService,
+  ) async {
+    final baseUri = Uri.parse(authService.currentBaseUrl);
+    final doctype = Uri.encodeComponent(_settingsDoctype);
+    final uri = baseUri.resolve('/api/resource/$doctype/$doctype');
+    final client = HttpClient();
+
+    try {
+      final request = await client.getUrl(uri);
+      request.cookies.addAll(authService.sessionCookies);
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+
+      final response = await request.close();
+      final body = await utf8.decoder.bind(response).join();
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw HttpException(
+          'Unable to read $_settingsDoctype.',
+          uri: uri,
+        );
+      }
+
+      final decoded = jsonDecode(body);
+      if (decoded is! Map || decoded['data'] is! Map) {
+        throw const FormatException('Invalid version settings response.');
+      }
+
+      return _AppUpdateInfo.fromJson(
+        Map<String, dynamic>.from(decoded['data'] as Map),
+      );
+    } finally {
+      client.close(force: true);
+    }
+  }
+}
+
+class _AppVersion implements Comparable<_AppVersion> {
+  const _AppVersion(this.parts, this.isValid);
+
+  factory _AppVersion.parse(String input) {
+    final value = input.trim();
+    if (value.isEmpty) {
+      return const _AppVersion(<int>[], false);
+    }
+
+    final parsed = <int>[];
+    for (final part in value.split('+').first.split('.')) {
+      final match = RegExp(r'^\d+').firstMatch(part.trim());
+      if (match == null) {
+        return const _AppVersion(<int>[], false);
+      }
+      parsed.add(int.parse(match.group(0)!));
+    }
+
+    return _AppVersion(parsed, parsed.isNotEmpty);
+  }
+
+  final List<int> parts;
+  final bool isValid;
+
+  @override
+  int compareTo(_AppVersion other) {
+    final length = parts.length > other.parts.length
+        ? parts.length
+        : other.parts.length;
+
+    for (var i = 0; i < length; i++) {
+      final left = i < parts.length ? parts[i] : 0;
+      final right = i < other.parts.length ? other.parts[i] : 0;
+
+      if (left != right) {
+        return left.compareTo(right);
+      }
+    }
+
+    return 0;
+  }
+}
+
+class _UpdateRequiredPage extends StatefulWidget {
+  const _UpdateRequiredPage({required this.decision});
+
+  final _AppUpdateDecision decision;
+
+  @override
+  State<_UpdateRequiredPage> createState() => _UpdateRequiredPageState();
+}
+
+class _UpdateRequiredPageState extends State<_UpdateRequiredPage> {
+  static const green = Color(0xFF008B68);
+  static const darkGreen = Color(0xFF004E45);
+
+  bool _opening = false;
+  String? _error;
+
+  Future<void> _updateNow() async {
+    final rawUrl = widget.decision.updateUrl.trim();
+
+    if (rawUrl.isEmpty) {
+      setState(() => _error = 'Update download link is not configured.');
+      return;
+    }
+
+    final uri = Uri.tryParse(rawUrl);
+    if (uri == null || uri.scheme.toLowerCase() != 'https') {
+      setState(() => _error = 'Update download link is invalid.');
+      return;
+    }
+
+    setState(() {
+      _opening = true;
+      _error = null;
+    });
+
+    try {
+      final opened = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!opened && mounted) {
+        setState(() => _error = 'Unable to open the update link.');
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Unable to open the update link.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _opening = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final info = widget.decision.info;
+
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF4F8F6),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x14000000),
+                        blurRadius: 24,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F6F1),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: const Icon(
+                          Icons.system_update_alt_rounded,
+                          color: green,
+                          size: 34,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Update Required',
+                        style: TextStyle(
+                          color: darkGreen,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.decision.message,
+                        style: const TextStyle(
+                          color: Color(0xFF6F7E79),
+                          fontSize: 14,
+                          height: 1.45,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      _VersionRow(
+                        label: 'Current Version',
+                        value: widget.decision.currentVersion,
+                      ),
+                      const Divider(height: 22),
+                      _VersionRow(
+                        label: 'Latest Version',
+                        value: info?.latestVersion ?? '-',
+                      ),
+                      const Divider(height: 22),
+                      _VersionRow(
+                        label: 'Minimum Supported',
+                        value: info?.minSupportedVersion ?? '-',
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 18),
+                        Text(
+                          _error!,
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: FilledButton.icon(
+                          onPressed: _opening ? null : _updateNow,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: green,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          icon: _opening
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.open_in_new_rounded),
+                          label: Text(
+                            _opening ? 'Opening...' : 'Update Now',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VersionRow extends StatelessWidget {
+  const _VersionRow({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF71807B),
+              fontSize: 13,
+            ),
+          ),
+        ),
+        Text(
+          value.isEmpty ? '-' : value,
+          style: const TextStyle(
+            color: Color(0xFF004E45),
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
     );
   }
 }
