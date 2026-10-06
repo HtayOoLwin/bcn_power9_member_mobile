@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -12,30 +14,66 @@ class MembershipCardPage extends StatefulWidget {
   State<MembershipCardPage> createState() => _MembershipCardPageState();
 }
 
-class _MembershipCardPageState extends State<MembershipCardPage> {
+class _MembershipCardPageState extends State<MembershipCardPage> with WidgetsBindingObserver {
   static const green = Color(0xFF006B50);
   static const darkGreen = Color(0xFF004E45);
   bool _loading = true;
   String? _error;
   MemberCardData? _card;
+  Timer? _autoRefreshTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+    _startAutoRefresh();
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  void _startAutoRefresh() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _load(silent: true),
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _load();
+      _startAutoRefresh();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _autoRefreshTimer?.cancel();
+    }
+  }
+
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (!silent && mounted) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     final result = await MemberCardService(widget.authService).load();
     if (!mounted) return;
     setState(() {
-      _loading = false;
-      _card = result.data;
-      _error = result.success ? null : result.message;
+      if (!silent) _loading = false;
+      if (result.success) {
+        _card = result.data;
+        _error = null;
+      } else if (!silent) {
+        _error = result.message;
+      }
     });
   }
 
