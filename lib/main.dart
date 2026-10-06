@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'member_registration_page.dart';
 import 'auth_service.dart';
 import 'member_home_page.dart';
@@ -30,13 +31,77 @@ class _LoginPageState extends State<LoginPage> {
   final _userController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _rememberMe = false;
   bool _isLoggingIn = false;
+  bool _isRestoringSession = true;
   String? _loginError;
   final MemberAuthService _authService = MemberAuthService();
+
+  static const _rememberMeKey = 'power9_member_remember_me';
+  static const _rememberedIdentifierKey =
+      'power9_member_remembered_identifier';
 
   static const green = Color(0xFF008B68);
   static const darkGreen = Color(0xFF004E45);
   static const lime = Color(0xFF9EE322);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedLogin();
+    _restoreSession();
+  }
+
+  Future<void> _loadRememberedLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rememberMe = prefs.getBool(_rememberMeKey) ?? false;
+    final identifier = prefs.getString(_rememberedIdentifierKey) ?? '';
+
+    if (!mounted) return;
+
+    setState(() {
+      _rememberMe = rememberMe;
+      if (rememberMe && identifier.isNotEmpty) {
+        _userController.text = identifier;
+      }
+    });
+  }
+
+  Future<void> _saveRememberedLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if (_rememberMe) {
+      await prefs.setBool(_rememberMeKey, true);
+      await prefs.setString(
+        _rememberedIdentifierKey,
+        _userController.text.trim(),
+      );
+    } else {
+      await prefs.remove(_rememberMeKey);
+      await prefs.remove(_rememberedIdentifierKey);
+    }
+  }
+
+  Future<void> _restoreSession() async {
+    final result = await _authService.restoreSession();
+    if (!mounted) return;
+
+    setState(() => _isRestoringSession = false);
+
+    if (result != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => MemberHomePage(
+              fullName: result.fullName,
+              authService: _authService,
+            ),
+          ),
+        );
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -68,6 +133,10 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
+    await _saveRememberedLogin();
+    await _authService.persistSession(rememberMe: _rememberMe);
+    if (!mounted) return;
+
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => MemberHomePage(
@@ -80,6 +149,14 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isRestoringSession) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: green),
+        ),
+      );
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
@@ -291,26 +368,52 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             SizedBox(
-              height: keyboardOpen ? 29 : (compact ? 34 : 38),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  key: const Key('forgot_password'),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: () {},
-                  child: Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: green,
-                      fontSize: compact ? 12 : 13,
-                      fontWeight: FontWeight.w800,
+              height: keyboardOpen ? 31 : (compact ? 36 : 40),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      key: const Key('remember_me_checkbox'),
+                      value: _rememberMe,
+                      activeColor: green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      onChanged: (value) {
+                        setState(() => _rememberMe = value ?? false);
+                      },
                     ),
                   ),
-                ),
+                  const SizedBox(width: 7),
+                  Text(
+                    'Remember me',
+                    style: TextStyle(
+                      color: darkGreen,
+                      fontSize: compact ? 12 : 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    key: const Key('forgot_password'),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () {},
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        color: green,
+                        fontSize: compact ? 12 : 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             SizedBox(
