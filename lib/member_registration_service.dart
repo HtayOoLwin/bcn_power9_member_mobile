@@ -19,17 +19,21 @@ class MemberRegistrationResult {
 }
 
 class MemberTypeOptionsResult {
-  const MemberTypeOptionsResult.success(this.memberTypes)
-      : success = true,
+  const MemberTypeOptionsResult.success(
+    this.memberTypes, {
+    required this.defaultMemberType,
+  })  : success = true,
         message = null;
 
   const MemberTypeOptionsResult.failure(this.message)
       : success = false,
-        memberTypes = const [];
+        memberTypes = const [],
+        defaultMemberType = '';
 
   final bool success;
   final String? message;
   final List<String> memberTypes;
+  final String defaultMemberType;
 }
 
 class MemberRegistrationService {
@@ -83,7 +87,16 @@ class MemberRegistrationService {
         }
       }
 
-      return MemberTypeOptionsResult.success(memberTypes);
+      final configuredDefault =
+          (data['default_member_type'] ?? '').toString().trim();
+      final defaultMemberType = configuredDefault.isNotEmpty
+          ? configuredDefault
+          : (memberTypes.length == 1 ? memberTypes.first : '');
+
+      return MemberTypeOptionsResult.success(
+        memberTypes,
+        defaultMemberType: defaultMemberType,
+      );
     } on SocketException {
       return const MemberTypeOptionsResult.failure(
         'Unable to connect to Power 9 server.',
