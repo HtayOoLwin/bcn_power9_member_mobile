@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -39,12 +41,22 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
   DateTime registrationDate = DateTime.now();
   final registrationService = MemberRegistrationService();
   bool isSubmitting = false;
+  Timer? _autoRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     loadMemberTypes();
+    _startAutoRefresh();
+  }
+
+  void _startAutoRefresh() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => loadMemberTypes(silent: true),
+    );
   }
 
   @override
@@ -52,24 +64,39 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
     if (state == AppLifecycleState.resumed) {
       registrationDate = DateTime.now();
       loadMemberTypes();
+      _startAutoRefresh();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _autoRefreshTimer?.cancel();
     }
   }
 
-  Future<void> loadMemberTypes() async {
-    setState(() {
-      isLoadingMemberTypes = true;
-      memberTypeError = null;
-    });
+  Future<void> loadMemberTypes({bool silent = false}) async {
+    if (!silent && mounted) {
+      setState(() {
+        isLoadingMemberTypes = true;
+        memberTypeError = null;
+      });
+    }
+
+    final previousMemberType = memberType;
 
     final result = await registrationService.getMemberTypes();
     if (!mounted) return;
 
     setState(() {
-      isLoadingMemberTypes = false;
+      if (!silent) isLoadingMemberTypes = false;
       if (result.success) {
         memberTypes = result.memberTypes;
-        memberType = memberTypes.isNotEmpty ? memberTypes.first : null;
-      } else {
+        if (previousMemberType != null &&
+            memberTypes.contains(previousMemberType)) {
+          memberType = previousMemberType;
+        } else {
+          memberType = memberTypes.isNotEmpty ? memberTypes.first : null;
+        }
+        memberTypeError = null;
+      } else if (!silent) {
         memberTypes = const [];
         memberType = null;
         memberTypeError = result.message;
@@ -79,6 +106,7 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
 
   @override
   void dispose() {
+    _autoRefreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     name.dispose();
     phone.dispose();
