@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'auth_service.dart';
@@ -20,7 +22,7 @@ class MemberHomePage extends StatefulWidget {
   State<MemberHomePage> createState() => _MemberHomePageState();
 }
 
-class _MemberHomePageState extends State<MemberHomePage> {
+class _MemberHomePageState extends State<MemberHomePage> with WidgetsBindingObserver {
   static const green = Color(0xFF006B50);
   static const darkGreen = Color(0xFF004E45);
   static const mint = Color(0xFFE7F5EF);
@@ -37,24 +39,90 @@ class _MemberHomePageState extends State<MemberHomePage> {
   MemberCardData? _profileCard;
   bool _profileLoading = false;
   String? _profileError;
+  Timer? _autoRefreshTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadDashboard();
+    _startAutoRefresh();
   }
 
-  Future<void> _loadDashboard() async {
-    setState(() {
-      _loading = true;
-      _loadError = null;
-    });
+  void _startAutoRefresh() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _refreshActivePage(silent: true),
+    );
+  }
+
+  Future<void> _refreshActivePage({bool silent = false}) async {
+    if (!mounted) return;
+
+    switch (_index) {
+      case 0:
+        await _loadDashboard(silent: silent);
+        break;
+      case 1:
+        // MembershipCardPage has its own 5-second refresh timer.
+        break;
+      case 2:
+        await _loadHistory(silent: silent);
+        await _loadDashboard(silent: true);
+        break;
+      case 3:
+        await _loadProfile(silent: silent);
+        await _loadDashboard(silent: true);
+        break;
+    }
+  }
+
+  void _changePage(int value) {
+    if (_index == value) {
+      _refreshActivePage();
+      return;
+    }
+    setState(() => _index = value);
+    _refreshActivePage();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshActivePage();
+      _startAutoRefresh();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _autoRefreshTimer?.cancel();
+    }
+  }
+
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> _loadDashboard({bool silent = false}) async {
+    if (!silent && mounted) {
+      setState(() {
+        _loading = true;
+        _loadError = null;
+      });
+    }
     final result = await MemberDashboardService(widget.authService).load();
     if (!mounted) return;
     setState(() {
-      _loading = false;
-      _data = result.data;
-      _loadError = result.success ? null : result.message;
+      if (!silent) _loading = false;
+      if (result.success) {
+        _data = result.data;
+        _loadError = null;
+      } else if (!silent) {
+        _loadError = result.message;
+      }
     });
   }
 
@@ -80,7 +148,7 @@ class _MemberHomePageState extends State<MemberHomePage> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (value) { setState(() => _index = value); if (value == 2 && _historyRows.isEmpty) _loadHistory(); if (value == 3 && _profileCard == null && !_profileLoading) _loadProfile(); },
+        onDestinationSelected: _changePage,
         indicatorColor: mint,
         backgroundColor: Colors.white,
         destinations: const [
@@ -171,7 +239,7 @@ class _MemberHomePageState extends State<MemberHomePage> {
         ),
         const SizedBox(height: 18),
         InkWell(
-          onTap: () => setState(() => _index = 2),
+          onTap: () => _changePage(2),
           borderRadius: BorderRadius.circular(20),
           child: Container(
             padding: const EdgeInsets.all(20),
@@ -224,7 +292,7 @@ class _MemberHomePageState extends State<MemberHomePage> {
               ),
             ),
             TextButton(
-              onPressed: () => setState(() => _index = 2),
+              onPressed: () => _changePage(2),
               child: const Text('View All', style: TextStyle(color: green)),
             ),
           ],
@@ -330,13 +398,28 @@ class _MemberHomePageState extends State<MemberHomePage> {
     return p[0].padLeft(2, '0') + ':' + p[1].padLeft(2, '0') + ':' + s;
   }
 
-  Future<void> _loadHistory() async {
-    if (_fromDate != null && _toDate != null && _fromDate!.isAfter(_toDate!)) { setState(() => _historyError = 'From Date cannot be after To Date.'); return; }
-    setState(() { _historyLoading = true; _historyError = null; });
+  Future<void> _loadHistory({bool silent = false}) async {
+    if (_fromDate != null && _toDate != null && _fromDate!.isAfter(_toDate!)) {
+      if (!silent) {
+        setState(() => _historyError = 'From Date cannot be after To Date.');
+      }
+      return;
+    }
+    if (!silent && mounted) {
+      setState(() { _historyLoading = true; _historyError = null; });
+    }
     final direction = _historyTab == 1 ? 'Earn' : (_historyTab == 2 ? 'Redeem' : null);
     final r = await MemberHistoryService(widget.authService).load(fromDate: _fromDate, toDate: _toDate, direction: direction);
     if (!mounted) return;
-    setState(() { _historyLoading = false; _historyError = r.success ? null : r.message; if (r.success) _historyRows = r.transactions; });
+    setState(() {
+      if (!silent) _historyLoading = false;
+      if (r.success) {
+        _historyError = null;
+        _historyRows = r.transactions;
+      } else if (!silent) {
+        _historyError = r.message;
+      }
+    });
   }
 
   Future<void> _pickHDate(bool from) async {
@@ -373,14 +456,20 @@ class _MemberHomePageState extends State<MemberHomePage> {
       ]))
     ]));
   }
-  Future<void> _loadProfile() async {
-    setState(() { _profileLoading = true; _profileError = null; });
+  Future<void> _loadProfile({bool silent = false}) async {
+    if (!silent && mounted) {
+      setState(() { _profileLoading = true; _profileError = null; });
+    }
     final result = await MemberCardService(widget.authService).load();
     if (!mounted) return;
     setState(() {
-      _profileLoading = false;
-      _profileCard = result.data;
-      _profileError = result.success ? null : result.message;
+      if (!silent) _profileLoading = false;
+      if (result.success) {
+        _profileCard = result.data;
+        _profileError = null;
+      } else if (!silent) {
+        _profileError = result.message;
+      }
     });
   }
 
