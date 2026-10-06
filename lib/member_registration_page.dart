@@ -241,7 +241,12 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
                     [
                       textField(name, 'Member Name *', required: true),
                       textField(phone, 'Phone *', required: true, keyboard: TextInputType.phone),
-                      dropdown('Gender', gender, ['Male', 'Female'], (v) => setState(() => gender = v)),
+                      dropdown(
+                        'Gender',
+                        gender,
+                        ['Male', 'Female', 'Others', 'Prefer not to say'],
+                        (v) => setState(() => gender = v),
+                      ),
                       textField(email, 'Email *', required: true, keyboard: TextInputType.emailAddress),
                       dropdown('Nationality', nationality, ['Myanmar', 'Other'], (v) => setState(() => nationality = v)),
                       textField(address, 'Address', lines: 3),
