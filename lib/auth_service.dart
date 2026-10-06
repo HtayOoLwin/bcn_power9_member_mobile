@@ -38,12 +38,21 @@ class MemberAuthService {
       if (isPhone) {
         final resolveUri = _baseUri
             .resolve('/api/method/power9_resolve_login_identifier')
-            .replace(queryParameters: {'identifier': loginUser});
+            .replace(
+          queryParameters: {
+            'identifier': loginUser,
+          },
+        );
 
         final resolveRequest = await _client.getUrl(resolveUri);
-        resolveRequest.headers.set(HttpHeaders.acceptHeader, 'application/json');
+        resolveRequest.headers.set(
+          HttpHeaders.acceptHeader,
+          'application/json',
+        );
+
         final resolveResponse = await resolveRequest.close();
-        final resolveBody = await utf8.decoder.bind(resolveResponse).join();
+        final resolveBody =
+            await utf8.decoder.bind(resolveResponse).join();
         final resolvePayload = _decode(resolveBody);
 
         if (resolveResponse.statusCode < 200 ||
@@ -53,14 +62,14 @@ class MemberAuthService {
           );
         }
 
-        final message = resolvePayload['message'];
-        if (message is! Map || message['user'] == null) {
+        final resolveMessage = resolvePayload['message'];
+        if (resolveMessage is! Map || resolveMessage['user'] == null) {
           return const LoginResult.failure(
             'Unable to find a user for this phone number.',
           );
         }
 
-        loginUser = message['user'].toString().trim();
+        loginUser = resolveMessage['user'].toString().trim();
         if (loginUser.isEmpty) {
           return const LoginResult.failure(
             'Unable to find a user for this phone number.',
@@ -68,15 +77,13 @@ class MemberAuthService {
         }
       }
 
-      final request = await _client.postUrl(
-        _baseUri.resolve('/api/method/login'),
-      );
+      final uri = _baseUri.resolve('/api/method/login');
+      final request = await _client.postUrl(uri);
       request.headers.contentType = ContentType(
         'application',
         'x-www-form-urlencoded',
         charset: 'utf-8',
       );
-      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       request.write(
         Uri(
           queryParameters: {
@@ -87,8 +94,8 @@ class MemberAuthService {
       );
 
       final response = await request.close();
-      final body = await utf8.decoder.bind(response).join();
-      final payload = _decode(body);
+      final responseBody = await utf8.decoder.bind(response).join();
+      final payload = _decode(responseBody);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         _sessionCookies = response.cookies;
@@ -108,6 +115,10 @@ class MemberAuthService {
     } on HandshakeException {
       return const LoginResult.failure(
         'Secure connection to Power 9 server failed.',
+      );
+    } on FormatException {
+      return const LoginResult.failure(
+        'Power 9 server returned an invalid response.',
       );
     } catch (_) {
       return const LoginResult.failure(
