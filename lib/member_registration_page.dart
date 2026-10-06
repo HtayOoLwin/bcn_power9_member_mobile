@@ -80,8 +80,6 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
       });
     }
 
-    final previousMemberType = memberType;
-
     final result = await registrationService.getMemberTypes();
     if (!mounted) return;
 
@@ -89,13 +87,12 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
       if (!silent) isLoadingMemberTypes = false;
       if (result.success) {
         memberTypes = result.memberTypes;
-        if (previousMemberType != null &&
-            memberTypes.contains(previousMemberType)) {
-          memberType = previousMemberType;
-        } else {
-          memberType = memberTypes.isNotEmpty ? memberTypes.first : null;
-        }
-        memberTypeError = null;
+        memberType = result.defaultMemberType.isNotEmpty
+            ? result.defaultMemberType
+            : null;
+        memberTypeError = memberType == null
+            ? 'Default member type is not configured.'
+            : null;
       } else if (!silent) {
         memberTypes = const [];
         memberType = null;
@@ -312,12 +309,9 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
                           ],
                         )
                       else
-                        dropdown(
+                        readOnlyTextField(
                           'Member Type *',
-                          memberType,
-                          memberTypes,
-                          (v) => setState(() => memberType = v),
-                          required: true,
+                          memberType ?? '-',
                         ),
                       readOnlyDateField('Registration Date *', registrationDate),
                     ],
@@ -531,6 +525,34 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
             Text(dateText(date), style: const TextStyle(fontSize: 16)),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget readOnlyTextField(String label, String value) {
+    return InputDecorator(
+      decoration: input(label).copyWith(
+        filled: true,
+        fillColor: const Color(0xFFF1F3F2),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              value.isEmpty ? '-' : value,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF5F6965),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const Icon(
+            Icons.lock_outline_rounded,
+            size: 18,
+            color: Color(0xFF7A8580),
+          ),
+        ],
       ),
     );
   }
