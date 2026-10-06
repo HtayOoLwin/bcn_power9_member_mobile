@@ -108,6 +108,14 @@ class _LoginPageState extends State<LoginPage> {
     final decision = await _MemberAppVersionService().check(_authService);
     if (!mounted) return;
 
+    if (decision.isUnavailable) {
+      setState(() {
+        _loginError =
+            decision.errorMessage ?? 'Unable to verify app version.';
+      });
+      return;
+    }
+
     if (decision.isRequired) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -659,15 +667,19 @@ class _AppUpdateDecision {
     required this.status,
     required this.currentVersion,
     this.info,
+    this.errorMessage,
   });
 
   final _AppUpdateStatus status;
   final String currentVersion;
   final _AppUpdateInfo? info;
+  final String? errorMessage;
 
   bool get isRequired => status == _AppUpdateStatus.required;
+  bool get isUnavailable => status == _AppUpdateStatus.unavailable;
 
   String get message => info?.message ??
+      errorMessage ??
       'A new POWER 9 Member App update is required.';
 
   String get updateUrl => info?.updateUrl ?? '';
@@ -719,12 +731,11 @@ class _MemberAppVersionService {
         currentVersion: currentVersion,
         info: info,
       );
-    } catch (_) {
-      // Fail open if version settings cannot be reached, so a temporary
-      // server/network problem does not permanently lock members out.
+    } catch (error) {
       return _AppUpdateDecision(
         status: _AppUpdateStatus.unavailable,
         currentVersion: currentVersion,
+        errorMessage: 'Version check failed: ' + error.toString(),
       );
     }
   }
@@ -747,9 +758,15 @@ class _MemberAppVersionService {
       final body = await utf8.decoder.bind(response).join();
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw HttpException(
-          'Unable to read member app version settings.',
-          uri: uri,
+        final compactBody =
+            body.length > 240 ? body.substring(0, 240) + '...' : body;
+        throw Exception(
+          'HTTP ' +
+              response.statusCode.toString() +
+              ' from ' +
+              uri.host +
+              ': ' +
+              compactBody,
         );
       }
 
