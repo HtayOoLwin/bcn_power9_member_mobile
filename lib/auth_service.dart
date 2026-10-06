@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 class LoginResult {
   const LoginResult.success({required this.fullName})
       : success = true,
@@ -20,7 +22,12 @@ class MemberAuthService {
 
   final HttpClient _client = HttpClient();
   Uri _baseUri = Uri.parse(baseUrl);
+  static const _secureStorage = FlutterSecureStorage();
+  static const _sessionCookieKey = 'power9_member_session_cookies';
+  static const _sessionFullNameKey = 'power9_member_session_full_name';
+  static const _sessionBaseUrlKey = 'power9_member_session_base_url';
   List<Cookie> _sessionCookies = const [];
+  String _sessionFullName = '';
 
   List<Cookie> get sessionCookies => List.unmodifiable(_sessionCookies);
   String get currentBaseUrl => _baseUri.toString();
@@ -99,8 +106,9 @@ class MemberAuthService {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         _sessionCookies = response.cookies;
+        _sessionFullName = (payload['full_name'] ?? loginUser).toString();
         return LoginResult.success(
-          fullName: (payload['full_name'] ?? loginUser).toString(),
+          fullName: _sessionFullName,
         );
       }
 
@@ -127,6 +135,95 @@ class MemberAuthService {
     }
   }
 
+  Future<void> persistSession({required bool rememberMe}) async {
+    if (!rememberMe || _sessionCookies.isEmpty) {
+      await clearSavedSession();
+      return;
+    }
+
+    final cookieValue = _sessionCookies
+        .map((cookie) => '${cookie.name}=${cookie.value}')
+        .join('; ');
+
+    await _secureStorage.write(
+      key: _sessionCookieKey,
+      value: cookieValue,
+    );
+    await _secureStorage.write(
+      key: _sessionFullNameKey,
+      value: _sessionFullName,
+    );
+    await _secureStorage.write(
+      key: _sessionBaseUrlKey,
+      value: _baseUri.toString(),
+    );
+  }
+
+  Future<LoginResult?> restoreSession() async {
+    final storedCookies = await _secureStorage.read(key: _sessionCookieKey);
+    if (storedCookies == null || storedCookies.trim().isEmpty) return null;
+
+    final storedBaseUrl = await _secureStorage.read(key: _sessionBaseUrlKey);
+    _baseUri = Uri.parse(
+      storedBaseUrl == null || storedBaseUrl.trim().isEmpty
+          ? baseUrl
+          : storedBaseUrl,
+    );
+
+    final cookies = <Cookie>[];
+    for (final part in storedCookies.split(';')) {
+      final value = part.trim();
+      final separator = value.indexOf('=');
+      if (separator <= 0) continue;
+      cookies.add(
+        Cookie(
+          value.substring(0, separator),
+          value.substring(separator + 1),
+        ),
+      );
+    }
+
+    if (cookies.isEmpty) return null;
+
+    try {
+      final uri = _baseUri.resolve('/api/method/frappe.auth.get_logged_user');
+      final request = await _client.getUrl(uri);
+      request.cookies.addAll(cookies);
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+
+      final response = await request.close();
+      final body = await utf8.decoder.bind(response).join();
+      final payload = _decode(body);
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        await clearSavedSession();
+        return null;
+      }
+
+      final user = payload['message']?.toString().trim() ?? '';
+      if (user.isEmpty || user == 'Guest') {
+        await clearSavedSession();
+        return null;
+      }
+
+      _sessionCookies = cookies;
+      _sessionFullName =
+          (await _secureStorage.read(key: _sessionFullNameKey))?.trim() ?? '';
+
+      return LoginResult.success(
+        fullName: _sessionFullName.isEmpty ? user : _sessionFullName,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> clearSavedSession() async {
+    await _secureStorage.delete(key: _sessionCookieKey);
+    await _secureStorage.delete(key: _sessionFullNameKey);
+    await _secureStorage.delete(key: _sessionBaseUrlKey);
+  }
+
   Future<void> logout() async {
     try {
       final request = await _client.getUrl(
@@ -135,9 +232,12 @@ class MemberAuthService {
       request.cookies.addAll(_sessionCookies);
       await request.close();
     } catch (_) {
-      // Always clear the local session even if the server is unreachable.
+      // Always clear local session even if server logout fails.
     } finally {
       _sessionCookies = const [];
+      _sessionFullName = '';
+      await clearSavedSession();
+      _baseUri = Uri.parse(baseUrl);
     }
   }
 
