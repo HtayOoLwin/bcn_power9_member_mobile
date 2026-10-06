@@ -674,9 +674,6 @@ class _AppUpdateDecision {
 }
 
 class _MemberAppVersionService {
-  static const String _settingsDoctype =
-      'Member App Version Control Settings';
-
   Future<_AppUpdateDecision> check(MemberAuthService authService) async {
     String currentVersion = '';
 
@@ -736,8 +733,9 @@ class _MemberAppVersionService {
     MemberAuthService authService,
   ) async {
     final baseUri = Uri.parse(authService.currentBaseUrl);
-    final doctype = Uri.encodeComponent(_settingsDoctype);
-    final uri = baseUri.resolve('/api/resource/$doctype/$doctype');
+    final uri = baseUri.resolve(
+      '/api/method/power9_member_app_version_member',
+    );
     final client = HttpClient();
 
     try {
@@ -750,18 +748,18 @@ class _MemberAppVersionService {
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw HttpException(
-          'Unable to read $_settingsDoctype.',
+          'Unable to read member app version settings.',
           uri: uri,
         );
       }
 
       final decoded = jsonDecode(body);
-      if (decoded is! Map || decoded['data'] is! Map) {
+      if (decoded is! Map || decoded['message'] is! Map) {
         throw const FormatException('Invalid version settings response.');
       }
 
       return _AppUpdateInfo.fromJson(
-        Map<String, dynamic>.from(decoded['data'] as Map),
+        Map<String, dynamic>.from(decoded['message'] as Map),
       );
     } finally {
       client.close(force: true);
