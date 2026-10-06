@@ -16,6 +16,17 @@ class LoginResult {
   final String fullName;
 }
 
+class PasswordResetResult {
+  const PasswordResetResult.success([
+    this.message = 'Password reset link sent.',
+  ]) : success = true;
+
+  const PasswordResetResult.failure(this.message) : success = false;
+
+  final bool success;
+  final String message;
+}
+
 class MemberAuthService {
   static const baseUrl = 'https://power9-member.s.frappe.cloud';
   static const bcnclBaseUrl = 'https://power9-dev.s.frappe.cloud';
@@ -131,6 +142,68 @@ class MemberAuthService {
     } catch (_) {
       return const LoginResult.failure(
         'Unable to sign in right now. Please try again.',
+      );
+    }
+  }
+
+  Future<PasswordResetResult> requestPasswordReset({
+    required String email,
+  }) async {
+    final value = email.trim().toLowerCase();
+    if (value.isEmpty || !value.contains('@')) {
+      return const PasswordResetResult.failure(
+        'Please enter a valid email address.',
+      );
+    }
+
+    final resetBaseUri = _baseUriForIdentifier(value);
+
+    try {
+      final uri = resetBaseUri.resolve(
+        '/api/method/frappe.core.doctype.user.user.reset_password',
+      );
+      final request = await _client.postUrl(uri);
+      request.headers.contentType = ContentType(
+        'application',
+        'x-www-form-urlencoded',
+        charset: 'utf-8',
+      );
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      request.write(
+        Uri(queryParameters: {'user': value}).query,
+      );
+
+      final response = await request.close();
+      final responseBody = await utf8.decoder.bind(response).join();
+      final payload = _decode(responseBody);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final message = payload['message']?.toString().trim();
+        return PasswordResetResult.success(
+          message == null || message.isEmpty
+              ? 'Password reset link sent.'
+              : message,
+        );
+      }
+
+      return PasswordResetResult.failure(
+        _error(payload) ?? 'Unable to send the password reset link.',
+      );
+    } on SocketException {
+      return const PasswordResetResult.failure(
+        'Unable to connect to Power 9 server. Check your internet connection.',
+      );
+    } on HandshakeException {
+      return const PasswordResetResult.failure(
+        'Secure connection to Power 9 server failed.',
+      );
+    } on FormatException {
+      return const PasswordResetResult.failure(
+        'Power 9 server returned an invalid response.',
+      );
+    } catch (_) {
+      return const PasswordResetResult.failure(
+        'Unable to send the password reset link right now. Please try again.',
       );
     }
   }
