@@ -1,4 +1,4 @@
-package com.example.bcn_power9_member_mobile
+package com.bcncl.power9memberreward
 
 import io.flutter.embedding.android.FlutterActivity
 
