@@ -34,8 +34,8 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
   String? nrcTownship;
   String nrcCitizenType = 'N';
   String? memberType;
-  String registrationServer = 'member';
   List<String> memberTypes = const [];
+  bool _memberTypesUsingBcnclRoute = false;
   bool isLoadingMemberTypes = true;
   String? memberTypeError;
   DateTime? dob;
@@ -73,6 +73,28 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
     }
   }
 
+  bool _usesBcnclRoute(String value) {
+    final identifier = value.trim().toLowerCase();
+    final isEmail = identifier.contains('@');
+    return isEmail &&
+        (identifier.endsWith('@bcncl.com') ||
+            identifier.endsWith('.bcncl@example.com'));
+  }
+
+  void _handleRegistrationEmailChanged(String value) {
+    final useBcnclRoute = _usesBcnclRoute(value);
+    if (useBcnclRoute == _memberTypesUsingBcnclRoute) return;
+
+    _memberTypesUsingBcnclRoute = useBcnclRoute;
+    setState(() {
+      memberType = null;
+      memberTypes = const [];
+      isLoadingMemberTypes = true;
+      memberTypeError = null;
+    });
+    loadMemberTypes();
+  }
+
   Future<void> loadMemberTypes({bool silent = false}) async {
     if (!silent && mounted) {
       setState(() {
@@ -82,13 +104,14 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
     }
 
     final result = await registrationService.getMemberTypes(
-      server: registrationServer,
+      identifier: email.text,
     );
     if (!mounted) return;
 
     setState(() {
       if (!silent) isLoadingMemberTypes = false;
       if (result.success) {
+        _memberTypesUsingBcnclRoute = _usesBcnclRoute(email.text);
         memberTypes = result.memberTypes;
         memberType = result.defaultMemberType.isNotEmpty
             ? result.defaultMemberType
@@ -178,7 +201,6 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
       idType: idType ?? '',
       idNumber: finalIdNumber,
       memberType: memberType ?? '',
-      server: registrationServer,
     );
 
     if (!mounted) return;
@@ -248,7 +270,13 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
                         ['Male', 'Female', 'Others', 'Prefer not to say'],
                         (v) => setState(() => gender = v),
                       ),
-                      textField(email, 'Email *', required: true, keyboard: TextInputType.emailAddress),
+                      textField(
+                        email,
+                        'Email *',
+                        required: true,
+                        keyboard: TextInputType.emailAddress,
+                        onChanged: _handleRegistrationEmailChanged,
+                      ),
                       dropdown('Nationality', nationality, ['Myanmar', 'Other'], (v) => setState(() => nationality = v)),
                       textField(address, 'Address', lines: 3),
                       dateField('Date Of Birth', dob, () async {
@@ -282,36 +310,6 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
                     Icons.groups_rounded,
                     'Membership Information',
                     [
-                      dropdown(
-                        'Registration Server *',
-                        registrationServer,
-                        const ['member', 'bcncl'],
-                        (v) {
-                          if (v == null || v == registrationServer) return;
-                          setState(() {
-                            registrationServer = v;
-                            memberType = null;
-                            memberTypes = const [];
-                            isLoadingMemberTypes = true;
-                            memberTypeError = null;
-                          });
-                          loadMemberTypes();
-                        },
-                        required: true,
-                      ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          registrationServer == 'bcncl'
-                              ? 'Server: power9-dev.s.frappe.cloud'
-                              : 'Server: power9-member.s.frappe.cloud',
-                          style: const TextStyle(
-                            color: Color(0xFF6A756F),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
                       if (isLoadingMemberTypes)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 12),
@@ -517,12 +515,19 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
     );
   }
 
-  Widget textField(TextEditingController controller, String label,
-      {bool required = false, int lines = 1, TextInputType? keyboard}) {
+  Widget textField(
+    TextEditingController controller,
+    String label, {
+    bool required = false,
+    int lines = 1,
+    TextInputType? keyboard,
+    ValueChanged<String>? onChanged,
+  }) {
     return TextFormField(
       controller: controller,
       maxLines: lines,
       keyboardType: keyboard,
+      onChanged: onChanged,
       decoration: input(label),
       validator: required
           ? (v) => v == null || v.trim().isEmpty ? '${label.replaceAll(' *', '')} is required.' : null
