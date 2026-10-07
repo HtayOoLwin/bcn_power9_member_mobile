@@ -500,7 +500,7 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
       ValueChanged<String?> onChanged,
       {bool required = false}) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       isExpanded: true,
       decoration: input(label),
       hint: const Text('Select'),
