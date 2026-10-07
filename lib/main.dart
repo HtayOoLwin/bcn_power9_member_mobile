@@ -735,7 +735,7 @@ class _MemberAppVersionService {
       return _AppUpdateDecision(
         status: _AppUpdateStatus.unavailable,
         currentVersion: currentVersion,
-        errorMessage: 'Version check failed: ' + error.toString(),
+        errorMessage: 'Version check failed: $error',
       );
     }
   }
@@ -759,14 +759,9 @@ class _MemberAppVersionService {
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         final compactBody =
-            body.length > 240 ? body.substring(0, 240) + '...' : body;
+            body.length > 240 ? '${body.substring(0, 240)}...' : body;
         throw Exception(
-          'HTTP ' +
-              response.statusCode.toString() +
-              ' from ' +
-              uri.host +
-              ': ' +
-              compactBody,
+          'HTTP \${response.statusCode} from \${uri.host}: $compactBody',
         );
       }
 
