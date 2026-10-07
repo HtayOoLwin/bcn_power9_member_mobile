@@ -39,12 +39,22 @@ class MemberTypeOptionsResult {
 class MemberRegistrationService {
   final HttpClient _client = HttpClient();
 
-  Future<MemberTypeOptionsResult> getMemberTypes() async {
+  Uri _baseUriForServer(String server) {
+    if (server.trim().toLowerCase() == 'bcncl') {
+      return Uri.parse(MemberAuthService.bcnclBaseUrl);
+    }
+    return Uri.parse(MemberAuthService.baseUrl);
+  }
+
+  Future<MemberTypeOptionsResult> getMemberTypes({
+    String server = 'member',
+  }) async {
     try {
+      final baseUri = _baseUriForServer(server);
       final request = await _client.getUrl(
-        Uri.parse(
-          '${MemberAuthService.baseUrl}/api/method/power9_member_register?action=options',
-        ),
+        baseUri
+            .resolve('/api/method/power9_member_register')
+            .replace(queryParameters: {'action': 'options'}),
       );
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
 
@@ -119,12 +129,12 @@ class MemberRegistrationService {
     required String idType,
     required String idNumber,
     required String memberType,
+    String server = 'member',
   }) async {
     try {
+      final baseUri = _baseUriForServer(server);
       final request = await _client.postUrl(
-        Uri.parse(
-          '${MemberAuthService.baseUrl}/api/method/power9_member_register',
-        ),
+        baseUri.resolve('/api/method/power9_member_register'),
       );
 
       request.headers.contentType = ContentType(
