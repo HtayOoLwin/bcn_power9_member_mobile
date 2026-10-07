@@ -34,6 +34,7 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
   String? nrcTownship;
   String nrcCitizenType = 'N';
   String? memberType;
+  String registrationServer = 'member';
   List<String> memberTypes = const [];
   bool isLoadingMemberTypes = true;
   String? memberTypeError;
@@ -80,7 +81,9 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
       });
     }
 
-    final result = await registrationService.getMemberTypes();
+    final result = await registrationService.getMemberTypes(
+      server: registrationServer,
+    );
     if (!mounted) return;
 
     setState(() {
@@ -175,6 +178,7 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
       idType: idType ?? '',
       idNumber: finalIdNumber,
       memberType: memberType ?? '',
+      server: registrationServer,
     );
 
     if (!mounted) return;
@@ -278,6 +282,36 @@ class _MemberRegistrationPageState extends State<MemberRegistrationPage> with Wi
                     Icons.groups_rounded,
                     'Membership Information',
                     [
+                      dropdown(
+                        'Registration Server *',
+                        registrationServer,
+                        const ['member', 'bcncl'],
+                        (v) {
+                          if (v == null || v == registrationServer) return;
+                          setState(() {
+                            registrationServer = v;
+                            memberType = null;
+                            memberTypes = const [];
+                            isLoadingMemberTypes = true;
+                            memberTypeError = null;
+                          });
+                          loadMemberTypes();
+                        },
+                        required: true,
+                      ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          registrationServer == 'bcncl'
+                              ? 'Server: power9-dev.s.frappe.cloud'
+                              : 'Server: power9-member.s.frappe.cloud',
+                          style: const TextStyle(
+                            color: Color(0xFF6A756F),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                       if (isLoadingMemberTypes)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 12),
