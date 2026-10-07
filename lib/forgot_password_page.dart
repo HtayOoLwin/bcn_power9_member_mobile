@@ -241,7 +241,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
         const SizedBox(height: 14),
         Text(
-          'We have sent a password reset link to\n' + _emailController.text.trim(),
+          'We have sent a password reset link to\n${_emailController.text.trim()}',
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: _mutedText,
