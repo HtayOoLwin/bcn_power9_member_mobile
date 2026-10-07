@@ -373,7 +373,11 @@ class MemberAuthService {
 
   Uri _baseUriForIdentifier(String identifier) {
     final value = identifier.trim().toLowerCase();
-    if (value.contains('@') && value.endsWith('@bcncl.com')) {
+    final isEmail = value.contains('@');
+    
+    if (isEmail &&
+        (value.endsWith('@bcncl.com') ||
+            value.endsWith('.bcncl@example.com'))) {
       return Uri.parse(bcnclBaseUrl);
     }
     return Uri.parse(baseUrl);
