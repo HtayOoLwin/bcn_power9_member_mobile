@@ -39,18 +39,24 @@ class MemberTypeOptionsResult {
 class MemberRegistrationService {
   final HttpClient _client = HttpClient();
 
-  Uri _baseUriForServer(String server) {
-    if (server.trim().toLowerCase() == 'bcncl') {
+  Uri _baseUriForIdentifier(String identifier) {
+    final value = identifier.trim().toLowerCase();
+    final isEmail = value.contains('@');
+
+    if (isEmail &&
+        (value.endsWith('@bcncl.com') ||
+            value.endsWith('.bcncl@example.com'))) {
       return Uri.parse(MemberAuthService.bcnclBaseUrl);
     }
+
     return Uri.parse(MemberAuthService.baseUrl);
   }
 
   Future<MemberTypeOptionsResult> getMemberTypes({
-    String server = 'member',
+    String identifier = '',
   }) async {
     try {
-      final baseUri = _baseUriForServer(server);
+      final baseUri = _baseUriForIdentifier(identifier);
       final request = await _client.getUrl(
         baseUri
             .resolve('/api/method/power9_member_register')
@@ -129,10 +135,9 @@ class MemberRegistrationService {
     required String idType,
     required String idNumber,
     required String memberType,
-    String server = 'member',
   }) async {
     try {
-      final baseUri = _baseUriForServer(server);
+      final baseUri = _baseUriForIdentifier(email);
       final request = await _client.postUrl(
         baseUri.resolve('/api/method/power9_member_register'),
       );
