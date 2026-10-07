@@ -315,27 +315,6 @@ class _MembershipCardPageState extends State<MembershipCardPage> with WidgetsBin
   }
 
 
-  Widget _greenInfo(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Color(0xFFBFE3D8), fontSize: 9, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 4),
-        Text(value.isEmpty ? '-' : value, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
-      ],
-    );
-  }
-
-  Widget _detail(String label, String value) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(color: Color(0xFFC3D7D0), fontSize: 9, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 4),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
-      ],
-    );
-  }
-
   Widget _securityNote() {
     return Container(
       width: double.infinity,
