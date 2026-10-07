@@ -116,8 +116,65 @@ class MemberAuthService {
       final payload = _decode(responseBody);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        _sessionCookies = response.cookies;
+        final cookies = <Cookie>[...response.cookies];
+
+        // Some hosted Frappe responses may expose Set-Cookie through headers
+        // even when HttpClientResponse.cookies is unexpectedly empty.
+        if (cookies.isEmpty) {
+          final rawSetCookies = response.headers[HttpHeaders.setCookieHeader];
+          if (rawSetCookies != null) {
+            for (final rawHeader in rawSetCookies) {
+              try {
+                cookies.add(Cookie.fromSetCookieValue(rawHeader));
+              } catch (_) {
+                // Ignore malformed cookie values and validate the session below.
+              }
+            }
+          }
+        }
+
+        final hasSessionCookie = cookies.any(
+          (cookie) =>
+              cookie.name.toLowerCase() == 'sid' && cookie.value.isNotEmpty,
+        );
+
+        if (!hasSessionCookie) {
+          return const LoginResult.failure(
+            'Login succeeded, but the server did not return a session cookie. '
+            'Please check the Frappe login/session configuration.',
+          );
+        }
+
+        _sessionCookies = cookies;
         _sessionFullName = (payload['full_name'] ?? loginUser).toString();
+
+        final verifyUri =
+            _baseUri.resolve('/api/method/frappe.auth.get_logged_user');
+        final verifyRequest = await _client.getUrl(verifyUri);
+        verifyRequest.cookies.addAll(_sessionCookies);
+        verifyRequest.headers.set(
+          HttpHeaders.acceptHeader,
+          'application/json',
+        );
+
+        final verifyResponse = await verifyRequest.close();
+        final verifyBody = await utf8.decoder.bind(verifyResponse).join();
+        final verifyPayload = _decode(verifyBody);
+        final verifiedUser =
+            verifyPayload['message']?.toString().trim() ?? '';
+
+        if (verifyResponse.statusCode < 200 ||
+            verifyResponse.statusCode >= 300 ||
+            verifiedUser.isEmpty ||
+            verifiedUser == 'Guest') {
+          _sessionCookies = const [];
+          _sessionFullName = '';
+          return const LoginResult.failure(
+            'Login succeeded, but the server session could not be verified. '
+            'Please login again.',
+          );
+        }
+
         return LoginResult.success(
           fullName: _sessionFullName,
         );
