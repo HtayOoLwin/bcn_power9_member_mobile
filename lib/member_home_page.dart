@@ -388,14 +388,14 @@ class _MemberHomePageState extends State<MemberHomePage> with WidgetsBindingObse
 
   String _hDate(DateTime? v) {
     if (v == null) return 'dd/mm/yyyy';
-    return v.day.toString().padLeft(2, '0') + '/' + v.month.toString().padLeft(2, '0') + '/' + v.year.toString();
+    return "${v.day.toString().padLeft(2, '0')}/${v.month.toString().padLeft(2, '0')}/${v.year}";
   }
 
   String _hApiDate(String v) { final d = DateTime.tryParse(v); return d == null ? v : _hDate(d); }
   String _hTime(String v) {
     final p = v.split(':'); if (p.length < 2) return v;
     final s = p.length > 2 ? p[2].split('.').first.padLeft(2, '0') : '00';
-    return p[0].padLeft(2, '0') + ':' + p[1].padLeft(2, '0') + ':' + s;
+    return "${p[0].padLeft(2, '0')}:${p[1].padLeft(2, '0')}:$s";
   }
 
   Future<void> _loadHistory({bool silent = false}) async {
@@ -447,12 +447,12 @@ class _MemberHomePageState extends State<MemberHomePage> with WidgetsBindingObse
           Expanded(child: FilledButton(onPressed: _loadHistory, style: FilledButton.styleFrom(backgroundColor: green), child: const Text('Apply'))), const SizedBox(width: 9),
           Expanded(child: OutlinedButton(onPressed: () { setState(() { _historyTab=0; _fromDate=null; _toDate=null; }); _loadHistory(); }, style: OutlinedButton.styleFrom(foregroundColor: green, side: const BorderSide(color: green)), child: const Text('Clear')))
         ]),
-        const SizedBox(height: 16), Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0AA77B),Color(0xFF08745C)]), borderRadius: BorderRadius.circular(18)), child: Row(children: [const Icon(Icons.stars_rounded,color: Colors.white), const SizedBox(width: 10), const Expanded(child: Text('Current Points',style: TextStyle(color: Colors.white,fontWeight: FontWeight.w700))), Text(_points(_data?.profile.currentPointBalance ?? 0) + ' pts',style: const TextStyle(color: Colors.white,fontSize: 24,fontWeight: FontWeight.w900))])),
-        const SizedBox(height: 18), Row(children: [const Expanded(child: Text('Transactions',style: TextStyle(fontSize:17,fontWeight:FontWeight.w900))), Text(_historyRows.length.toString() + ' records',style: const TextStyle(color:Color(0xFF7A8782),fontSize:11))]), const SizedBox(height: 8),
+        const SizedBox(height: 16), Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0AA77B),Color(0xFF08745C)]), borderRadius: BorderRadius.circular(18)), child: Row(children: [const Icon(Icons.stars_rounded,color: Colors.white), const SizedBox(width: 10), const Expanded(child: Text('Current Points',style: TextStyle(color: Colors.white,fontWeight: FontWeight.w700))), Text('${_points(_data?.profile.currentPointBalance ?? 0)} pts',style: const TextStyle(color: Colors.white,fontSize: 24,fontWeight: FontWeight.w900))])),
+        const SizedBox(height: 18), Row(children: [const Expanded(child: Text('Transactions',style: TextStyle(fontSize:17,fontWeight:FontWeight.w900))), Text('${_historyRows.length} records',style: const TextStyle(color:Color(0xFF7A8782),fontSize:11))]), const SizedBox(height: 8),
         if (_historyLoading) const Padding(padding: EdgeInsets.all(30), child: CircularProgressIndicator(color: green))
         else if (_historyError != null) Column(children:[Text(_historyError!,textAlign:TextAlign.center,style:const TextStyle(color:Colors.redAccent)),TextButton(onPressed:_loadHistory,child:const Text('Retry'))])
         else if (_historyRows.isEmpty) const Padding(padding:EdgeInsets.all(30),child:Text('No point history found.',style:TextStyle(color:Color(0xFF718092))))
-        else ..._historyRows.map((tx) { final earned=tx.earned; return Container(margin:const EdgeInsets.only(bottom:8),padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14),border:Border.all(color:const Color(0xFFE4EAE7))),child:Row(children:[CircleAvatar(radius:20,backgroundColor:earned?const Color(0xFFE1F6E9):const Color(0xFFFDE8E8),child:Icon(earned?Icons.add_rounded:Icons.remove_rounded,color:earned?const Color(0xFF079447):const Color(0xFFD92D20))),const SizedBox(width:11),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(earned?'Points Added':'Points Redeemed',style:const TextStyle(fontWeight:FontWeight.w800)),const SizedBox(height:3),Text(_hApiDate(tx.postingDate)+'  '+_hTime(tx.postingTime),style:const TextStyle(color:Color(0xFF7A8782),fontSize:11))])),Text((earned?'+ ':'- ')+_points(tx.points),style:TextStyle(color:earned?const Color(0xFF079447):const Color(0xFFD92D20),fontSize:16,fontWeight:FontWeight.w900))])); })
+        else ..._historyRows.map((tx) { final earned=tx.earned; return Container(margin:const EdgeInsets.only(bottom:8),padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(14),border:Border.all(color:const Color(0xFFE4EAE7))),child:Row(children:[CircleAvatar(radius:20,backgroundColor:earned?const Color(0xFFE1F6E9):const Color(0xFFFDE8E8),child:Icon(earned?Icons.add_rounded:Icons.remove_rounded,color:earned?const Color(0xFF079447):const Color(0xFFD92D20))),const SizedBox(width:11),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(earned?'Points Added':'Points Redeemed',style:const TextStyle(fontWeight:FontWeight.w800)),const SizedBox(height:3),Text('${_hApiDate(tx.postingDate)}  ${_hTime(tx.postingTime)}',style:const TextStyle(color:Color(0xFF7A8782),fontSize:11))])),Text('${earned ? '+ ' : '- '}${_points(tx.points)}',style:TextStyle(color:earned?const Color(0xFF079447):const Color(0xFFD92D20),fontSize:16,fontWeight:FontWeight.w900))])); })
       ]))
     ]));
   }
@@ -671,33 +671,5 @@ class _MemberHomePageState extends State<MemberHomePage> with WidgetsBindingObse
       if (!mounted) return;
       Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
     }
-  }
-}
-
-class _ComingSoonPage extends StatelessWidget {
-  const _ComingSoonPage({required this.icon, required this.title});
-  final IconData icon;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 72, color: const Color(0xFF006B50)),
-          const SizedBox(height: 14),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'UI will be connected in the next step.',
-            style: TextStyle(color: Color(0xFF718092)),
-          ),
-        ],
-      ),
-    );
   }
 }
