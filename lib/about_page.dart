@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class AboutPage extends StatelessWidget {
+class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
+
+  @override
+  State<AboutPage> createState() => _AboutPageState();
+}
+
+class _AboutPageState extends State<AboutPage> {
 
   static const green = Color(0xFF006B50);
   static const darkGreen = Color(0xFF004E45);
@@ -11,6 +18,25 @@ class AboutPage extends StatelessWidget {
 
   static final Uri websiteUri = Uri.parse('https://www.bcncl.com');
   static final Uri supportUri = Uri.parse('https://support.bcncl.com/');
+
+  String appVersion = '-';
+  String buildNumber = '-';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+
+    setState(() {
+      appVersion = info.version.trim();
+      buildNumber = info.buildNumber.trim();
+    });
+  }
 
   Future<void> _openUrl(BuildContext context, Uri uri) async {
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -42,14 +68,14 @@ class AboutPage extends StatelessWidget {
             _section(
               icon: Icons.info_rounded,
               title: 'App Information',
-              children: const [
+              children: [
                 _InfoRow(
                   label: 'App Version',
-                  value: '1.0.0',
+                  value: appVersion,
                 ),
                 _InfoRow(
                   label: 'Build Number',
-                  value: '1',
+                  value: buildNumber,
                   showDivider: false,
                 ),
               ],
@@ -247,7 +273,7 @@ class _LinkRow extends StatelessWidget {
                 value,
                 textAlign: TextAlign.right,
                 style: const TextStyle(
-                  color: AboutPage.green,
+                  color: _AboutPageState.green,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -257,7 +283,7 @@ class _LinkRow extends StatelessWidget {
             const Icon(
               Icons.open_in_new_rounded,
               size: 20,
-              color: AboutPage.green,
+              color: _AboutPageState.green,
             ),
           ],
         ),
