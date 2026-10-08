@@ -581,7 +581,9 @@ class _MemberHomePageState extends State<MemberHomePage> with WidgetsBindingObse
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => const AboutPage(),
+                          builder: (_) => AboutPage(
+                            authService: widget.authService,
+                          ),
                         ),
                       );
                     },
